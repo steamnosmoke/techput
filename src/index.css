@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Подключение шрифта */
+@font-face {
+  font-family: "NK89";
+  src: url("/fonts/nk89.otf") format("opentype");
+}
+
+/* Кастомная тема v4 */
+@theme {
+  --color-deepBlue: #0c0d33;
+  --color-darkBg: #0f172a;
+  --color-orange: #DD6208;
+
+  --font-rubik: "Rubik", sans-serif;
+  --font-nk: "NK89", sans-serif;
+}
+
+.container{
+  @apply mx-auto px-5 max-w-360;
+}
+
+*{
+  @apply font-rubik;
+}
+
+h1,h2,h3,h4,h5, li {
+  @apply font-nk;
+}
