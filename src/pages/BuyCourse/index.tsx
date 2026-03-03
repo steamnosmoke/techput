@@ -152,9 +152,6 @@ export default function BuyCourse() {
         <button className="bg-[#DD6207] hover:bg-orange-600 text-white px-12 py-5 rounded-2xl font-bold text-xl transition-all duration-200 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50">
           Начать обучение
         </button>
-        <p className="text-blue-200 mt-4 text-sm">
-          7 дней бесплатного пробного периода
-        </p>
       </div>
     </div>
   );
