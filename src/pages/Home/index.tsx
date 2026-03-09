@@ -10,7 +10,7 @@ import WhySection from "./components/Why";
 
 export default function MainPage() {
   return (
-    <div className="mt-28">
+    <div className="mt-28 max-sm:mt-20">
       <Banner />
       <HowItWorking />
       <AIPractise />

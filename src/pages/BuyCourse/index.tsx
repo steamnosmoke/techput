@@ -7,12 +7,14 @@ import {
   Zap,
   Users,
   Briefcase,
+  Cog
 } from "lucide-react";
 
 export default function BuyCourse() {
   const features = [
     { name: "Теория", free: false, pro: true },
     { name: "Видео", free: false, pro: true },
+    { name: "Трехдневная практика", free: false, pro: true },
     { name: "AI анализ", free: "1 в день", pro: "Без ограничений" },
     { name: "AI консультация", free: "5 в день", pro: "Без ограничений" },
     { name: "История прогресса", free: false, pro: true },
@@ -22,6 +24,7 @@ export default function BuyCourse() {
   const includes = [
     { icon: BookOpen, text: "8 теоретических разделов" },
     { icon: Video, text: "40+ видео" },
+    { icon: Cog, text: "3 дня практики" },
     { icon: Sparkles, text: "AI-помощник 24/7" },
     { icon: Zap, text: "Разбор дефектов" },
     { icon: Check, text: "Обновления материалов" },
@@ -67,7 +70,7 @@ export default function BuyCourse() {
                     feature.free ? (
                       <Check className="w-5 h-5 text-green-500" />
                     ) : (
-                      <X className="w-5 h-5 text-gray-300" />
+                      <X className="w-5 h-5 text-red-700" />
                     )
                   ) : (
                     <span className="text-sm text-gray-500">
@@ -88,8 +91,7 @@ export default function BuyCourse() {
               <h3 className="text-xl font-bold mb-2">Полный доступ</h3>
               <p className="text-blue-200">Максимум возможностей</p>
               <div className="mt-4">
-                <span className="text-4xl font-bold">2 990 ₽</span>
-                <span className="text-blue-200">/мес</span>
+                <span className="text-4xl font-bold">9 990 ₽</span>
               </div>
             </div>
             <div className="space-y-4">

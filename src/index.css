@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@import "./styles/keyframes/navMenu.scss";
+
 /* Подключение шрифта */
 @font-face {
   font-family: "NK89";
@@ -14,16 +16,18 @@
 
   --font-rubik: "Rubik", sans-serif;
   --font-nk: "NK89", sans-serif;
+
+  --breakpoint-sm: 450px;
 }
 
 .container{
-  @apply mx-auto px-5 max-w-360;
+  @apply mx-auto px-5 max-w-360 min-w-0 max-sm:px-2.5;
 }
 
 *{
   @apply font-rubik;
 }
 
-h1,h2,h3,h4,h5, li {
+h1,h2,h3,h4,h5, li, button {
   @apply font-nk;
 }

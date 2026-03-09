@@ -114,7 +114,7 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="flex items-center justify-center mt-23">
+    <div className="flex items-center justify-center mt-23 max-sm:mt-16 max-sm:px-4">
       <div className="max-w-4xl w-full bg-deepBlue rounded-2xl p-8">
         <div className="grid md:grid-cols-2 gap-8 md:gap-16">
           <div>
@@ -144,7 +144,7 @@ export default function ContactForm() {
               {nameEr && <p className="mt-1 text-xs text-red-500">{nameEr}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 max-sm:flex max-sm:flex-col gap-3">
               <div>
                 <input
                   type="tel"

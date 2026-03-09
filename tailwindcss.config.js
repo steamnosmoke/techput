@@ -16,7 +16,12 @@ export default {
         darkBg: "#0f172a",
         orange: "#DD6208",
       },
+
+      screens: {
+        'sm': "400px",
+      }
     },
+    
   },
 
   plugins: [],
