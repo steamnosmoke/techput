@@ -4,6 +4,7 @@ export type TInputs = {
   value: string;
   placeholder: string;
   func: (s: string) => void;
+  fieldName: string;
 };
 
 export type TModalProps = {

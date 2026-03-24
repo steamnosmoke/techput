@@ -18,11 +18,12 @@ export default {
       },
 
       screens: {
-        'sm': "400px",
-      }
+        sm: "400px",
+      },
     },
-    
   },
 
   plugins: [],
+
+  
 };

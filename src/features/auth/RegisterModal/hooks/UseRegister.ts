@@ -2,7 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { nanoid } from "nanoid";
 
-
 import type { TLogin } from "../../types/AuthTypes";
 import type { TUser } from "../../../../app/types/user";
 
@@ -12,34 +11,36 @@ async function registerUser({
   email,
   password,
   confirm,
+  name,
+  phone
 }: TLogin): Promise<TUser> {
   if (password !== confirm) {
     throw new Error("Passwords do not match");
   }
 
-  const { data: users } = await axios.get<TUser[]>(DB_URL, {
-    params: { email },
-  });
+  // получаем ВСЕХ пользователей
+  const { data: users } = await axios.get<TUser[]>(DB_URL);
 
-  if (users) {
+  // ищем вручную
+  const userExists = users.some((u) => u.email === email);
+
+  if (userExists) {
     throw new Error("This e-mail is already registered");
   }
 
-
   const newUser = {
     id: nanoid(10),
-    name: "",
+    name,
     email,
-    phone: "",
+    phone,
     passwordHash: password,
     status: false,
   };
 
   const { data } = await axios.post<TUser>(DB_URL, newUser);
-  
+
   return data;
 }
-
 export function useRegister() {
   return useMutation({
     mutationFn: registerUser,

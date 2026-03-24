@@ -15,7 +15,7 @@ export default function WhySection() {
 
         <div className="grid grid-cols-3 max-sm:flex max-sm:flex-col gap-7.5 max-sm:gap-4 justify-center">
           {/* Большой блок */}
-          <div className="col-span-3 max-sm:flex max-sm:flex-col w-full shadow-[0px_0px_8px_2px_rgba(0,0,0,0.1)] rounded-[45px] max-sm:rounded-3xl p-12 max-sm:px-0 max-sm:py-4 items-center justify-between gap-6 max-sm:gap-0">
+          <div className="col-span-3 flex max-sm:flex-col w-full shadow-[0px_0px_8px_2px_rgba(0,0,0,0.1)] rounded-[45px] max-sm:rounded-3xl p-12 max-sm:px-0 max-sm:py-4 items-center justify-between gap-6 max-sm:gap-0">
             <div className="left text w-[40%] max-sm:w-full max-sm:px-6">
               <h4 className="text-black text-3xl max-sm:text-xl mb-4">
                 Фокус на реальной профессии,
@@ -37,7 +37,7 @@ export default function WhySection() {
             </div>
 
             <div className="right w-[50%] max-sm:w-full h-122.5 max-sm:h-auto rounded-[35px] max-sm:rounded-none p-8 max-sm:p-4 pt-15 max-sm:pt-4 bg-orange flex justify-center">
-              <img src={large} alt="" className="w-full max-w-125" />
+              <img src={large} alt="" className="w-full max-sm:max-w-125" />
             </div>
             <Link to={"/buy-access"} className="max-sm:block hidden mt-3 mx-5">
               <Button
@@ -55,15 +55,13 @@ export default function WhySection() {
                 el.col ? "text-white" : ""
               }`}
             >
-              <img className="max-sm:w-20" src={el.img} alt="" />
+              <img className="w-30 max-sm:w-20" src={el.img} alt="" />
 
               <h4 className="text-center text-3xl max-sm:text-xl max-sm:text-nowrap">
                 {el.title}
               </h4>
 
-              <p className="text-center text-xl max-sm:text-base">
-                {el.text}
-              </p>
+              <p className="text-center text-xl max-sm:text-base">{el.text}</p>
             </div>
           ))}
         </div>

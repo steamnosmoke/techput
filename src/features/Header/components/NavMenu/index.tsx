@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { useAuthStore } from "../../../auth/store/authStore";
 import useGetNavs from "../../config/useGetNavs";
@@ -10,22 +10,39 @@ export default function NavMenu() {
   const id = useAuthStore((s) => s.id);
   const navs = useGetNavs(id);
 
+  const [hasInteracted, setHasInteracted] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "auto";
+
+    if (isOpen) setHasInteracted(true);
 
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
 
+  const getMenuClass = () => {
+    if (!hasInteracted) return "translate-x-full"; // 👈 сразу скрыто БЕЗ анимации
+    return isOpen ? "menu-open" : "menu-close";
+  };
+
+  const getOverlayClass = () => {
+    if (!hasInteracted) return "opacity-0";
+    return isOpen ? "overlay-open max-sm:block" : "overlay-close max-sm:hidden";
+  };
+
   return (
     <>
+      {/* MENU */}
       <div
-        className={`nav-menu w-[60%] h-screen bg-deepBlue fixed z-[1000] top-16 right-0 ${
-          isOpen ? "menu-open" : "menu-close"
-        }`}
+        className={`nav-menu 
+        hidden max-sm:block
+        w-[80%] h-screen bg-deepBlue
+        fixed z-[1000] top-16 right-0 
+        ${getMenuClass()}`}
       >
-        <ul className="flex flex-col items-end justify-start pt-4 pr-8 gap-7.5">
+        <ul className="flex flex-col items-end pt-6 pr-6 gap-6">
           {navs.map((el, key) => (
             <NavLink
               key={key}
@@ -38,7 +55,7 @@ export default function NavMenu() {
                 toggleMenu();
               }}
             >
-              <li className="text-white text-right text-xl cursor-pointer transition-all ease-in duration-200 hover:text-orange-300">
+              <li className="text-white text-right text-xl max-sm:text-lg cursor-pointer transition-all duration-200 hover:text-orange-300">
                 {el.name}
               </li>
             </NavLink>
@@ -46,11 +63,14 @@ export default function NavMenu() {
         </ul>
       </div>
 
+      {/* OVERLAY */}
       <div
-        className={`bg-black fixed top-0 left-0 w-screen h-screen ${
-          isOpen ? "overlay-open" : "overlay-close"
-        }`} onClick={toggleMenu}
-      ></div>
+        onClick={() => {
+          toggleMenu();
+          setHasInteracted(true);
+        }}
+        className={`bg-black hidden  fixed top-0 left-0 w-screen h-screen z-[999] ${getOverlayClass()}`}
+      />
     </>
   );
 }

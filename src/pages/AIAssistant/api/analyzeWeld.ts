@@ -1,0 +1,27 @@
+import axios from "axios";
+
+export interface AnalyzeWeldResponse {
+  hasDefect: boolean;
+  defectType: string;
+  severity: "low" | "medium" | "high" | "unknown";
+  confidence: number;
+  comment: string;
+  recommendation: string;
+}
+
+export const analyzeWeld = async (file: File): Promise<AnalyzeWeldResponse> => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const { data } = await axios.post<AnalyzeWeldResponse>(
+    "http://localhost:5000/api/analyze-weld",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+
+  return data;
+};

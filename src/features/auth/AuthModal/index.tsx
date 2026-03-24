@@ -62,7 +62,7 @@ export default function AuthModal({
       onClick={onClickClose}
     >
       <div
-        className="modal relative bg-white py-8 px-16 rounded-xl w-full max-w-120 shadow-[0_8px_24px_rgba(0,0,0,0.2)] text-center flex flex-col items-center gap-4"
+        className="modal relative bg-white py-8 max-sm:py-4 px-16 max-sm:px-6 rounded-xl w-full max-w-120 max-sm:max-w-80 shadow-[0_8px_24px_rgba(0,0,0,0.2)] text-center flex flex-col items-center gap-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* <img
@@ -77,13 +77,13 @@ export default function AuthModal({
         {error && <p className="error text-red-500 text-base mb-4">{error}</p>}
 
         <Button
-          twclass=" !min-w-0 !py-2 !w-60 !text-lg !text-orange !border-2 hover:!text-white"
+          twclass="!min-w-0 !py-2 !px-2 !w-60 !text-lg max-sm:!text-base !text-orange !border-2 hover:!text-white disabled:opacity-50 disabled:cursor-not-allowed !my-2"
           text="Войти"
           onClick={onLogin}
         />
 
         <p className="to-register mt-4 text-base text-black">
-          Нет аккаунта?{" "}
+          Нет аккаунта? <br className="hidden max-sm:block" />
           <span
             className="to-register-button text-black font-bold underline cursor-pointer transition-all duration-200 hover:opacity-70"
             onClick={onSwitchToRegister}

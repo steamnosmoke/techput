@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Check, BookOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronRight, Check, BookOpen} from 'lucide-react';
 
 interface Lesson {
   id: string;
@@ -82,6 +82,19 @@ export const Sidebar = () => {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
     new Set(['1', '2'])
   );
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters((prev) => {
@@ -96,125 +109,162 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="w-100 h-screen bg-white border-r border-gray-200 flex flex-col sticky top-0">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#0C0D33] flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-[#0C0D33]">Обучение сварке</h1>
-            <p className="text-xs text-gray-500">Профессиональный курс</p>
+    <>
+      {/* КНОПКА ОТКРЫТИЯ/ЗАКРЫТИЯ - только на мобильных */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-20 left-0 z-50 bg-[#DD6207] text-white p-2 rounded-r-xl hover:bg-[#c75a06] transition-colors lg:hidden"
+        aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
+      >
+        <p className={`w-6 text-2xl transition-all duration-200 ${isOpen ? "rotate-z-540" : ""}`} >{`>`}</p>
+      </button>
+
+      {/* OVERLAY - только на мобильных */}
+      <div
+        className={`fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300 ${
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
+
+      {/* SIDEBAR */}
+      <aside
+        className={`
+          h-screen w-80 bg-white border-r border-gray-200 flex flex-col
+          transition-transform duration-300 ease-in-out
+          lg:sticky lg:top-0 lg:translate-x-0 lg:block
+          fixed top-16 left-0 z-40
+          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
+      >
+        {/* Header */}
+        <div className="p-6 max-sm:pt-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0C0D33] flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-[#0C0D33]">
+                Обучение сварке
+              </h1>
+              <p className="text-xs text-gray-500">Профессиональный курс</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Chapters List */}
-      <div className="flex-1 overflow-y-auto py-4">
-        {chapters.map((chapter) => {
-          const isExpanded = expandedChapters.has(chapter.id);
-          const isActive = chapter.isActive;
+        {/* Chapters List */}
+        <div className="flex-1 overflow-y-auto py-4">
+          {chapters.map((chapter) => {
+            const isExpanded = expandedChapters.has(chapter.id);
+            const isActive = chapter.isActive;
 
-          return (
-            <div key={chapter.id} className="mb-1">
-              {/* Chapter Header */}
-              <button
-                onClick={() => toggleChapter(chapter.id)}
-                className={`w-full px-6 py-3 flex items-center justify-between transition-all duration-200 relative ${
-                  isActive ? 'bg-gray-50' : 'hover:bg-gray-50'
-                }`}
-              >
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#DD6207]" />
-                )}
-                <div className="flex items-center gap-2 flex-1">
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+            return (
+              <div key={chapter.id} className="mb-1">
+                {/* Chapter Header */}
+                <button
+                  onClick={() => toggleChapter(chapter.id)}
+                  className={`w-full px-6 py-3 flex items-center justify-between transition-all duration-200 relative ${
+                    isActive ? "bg-gray-50" : "hover:bg-gray-50"
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#DD6207]" />
                   )}
-                  <span
-                    className={`text-md font-medium text-left ${
-                      isActive ? 'text-[#0C0D33]' : 'text-gray-700'
-                    }`}
-                  >
-                    {chapter.title}
-                  </span>
-                </div>
-              </button>
-
-              {/* Progress Bar */}
-              <div className="px-12 mb-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-base text-gray-400">{chapter.progress}%</span>
-                </div>
-                <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#DD6207] rounded-full transition-all duration-300"
-                    style={{ width: `${chapter.progress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Lessons */}
-              {isExpanded && (
-                <div className="animate-in slide-in-from-top-2 duration-200">
-                  {chapter.lessons.map((lesson) => (
-                    <button
-                      key={lesson.id}
-                      className={`w-full px-12 py-2.5 flex items-center gap-3 transition-all duration-200 group relative ${
-                        lesson.isActive
-                          ? 'bg-blue-50'
-                          : 'hover:bg-orange-50/50'
+                  <div className="flex items-center gap-2 flex-1">
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span
+                      className={`text-md font-medium text-left ${
+                        isActive ? "text-[#0C0D33]" : "text-gray-700"
                       }`}
                     >
-                      {lesson.isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#DD6207]" />
-                      )}
-                      {lesson.completed ? (
-                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 text-green-600" />
-                        </div>
-                      ) : (
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
-                            lesson.isActive
-                              ? 'border-[#DD6207]'
-                              : 'border-gray-300 group-hover:border-[#DD6207]/50'
-                          }`}
-                        />
-                      )}
-                      <span
-                        className={`text-md text-left flex-1 ${
+                      {chapter.title}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Progress Bar */}
+                <div className="px-12 mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-base text-gray-400">
+                      {chapter.progress}%
+                    </span>
+                  </div>
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#DD6207] rounded-full transition-all duration-300"
+                      style={{ width: `${chapter.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Lessons */}
+                {isExpanded && (
+                  <div className="animate-in slide-in-from-top-2 duration-200">
+                    {chapter.lessons.map((lesson) => (
+                      <button
+                        key={lesson.id}
+                        onClick={() => {
+                          setIsOpen(false);
+                        }}
+                        className={`w-full px-12 py-2.5 flex items-center gap-3 transition-all duration-200 group relative ${
                           lesson.isActive
-                            ? 'text-[#0C0D33] font-medium'
-                            : lesson.completed
-                            ? 'text-gray-600'
-                            : 'text-gray-500 group-hover:text-gray-700'
+                            ? "bg-blue-50"
+                            : "hover:bg-orange-50/50"
                         }`}
                       >
-                        {lesson.title}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                        {lesson.isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#DD6207]" />
+                        )}
+                        {lesson.completed ? (
+                          <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 text-green-600" />
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
+                              lesson.isActive
+                                ? "border-[#DD6207]"
+                                : "border-gray-300 group-hover:border-[#DD6207]/50"
+                            }`}
+                          />
+                        )}
+                        <span
+                          className={`text-md text-left flex-1 ${
+                            lesson.isActive
+                              ? "text-[#0C0D33] font-medium"
+                              : lesson.completed
+                                ? "text-gray-600"
+                                : "text-gray-500 group-hover:text-gray-700"
+                          }`}
+                        >
+                          {lesson.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
-      {/* Footer */}
-      <div className="p-6 border-t border-gray-100">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">Общий прогресс</span>
-          <span className="text-sm font-semibold text-[#DD6207]">32%</span>
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Общий прогресс</span>
+            <span className="text-sm font-semibold text-[#DD6207]">32%</span>
+          </div>
+          <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full w-[32%] bg-[#DD6207] rounded-full" />
+          </div>
         </div>
-        <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full w-[32%] bg-[#DD6207] rounded-full" />
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
