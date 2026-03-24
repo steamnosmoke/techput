@@ -56,6 +56,7 @@ export default function AIAssistant() {
 
       setAnalysisResult(result);
       setShowResults(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setAnalyzeError(
         error?.response?.data?.error ||
@@ -297,7 +298,7 @@ export default function AIAssistant() {
               <img
                 src={previewUrl}
                 alt="Предпросмотр"
-                className="w-full max-h-[400px] object-contain rounded-2xl border"
+                className="w-full max-h-100 object-contain rounded-2xl border"
               />
             </div>
           )}

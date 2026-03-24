@@ -51,7 +51,7 @@ export default function WeldAnalyzer() {
         <img
           src={preview}
           alt="Preview"
-          className="w-full max-h-[400px] object-contain rounded-xl border"
+          className="w-full max-h-100 object-contain rounded-xl border"
         />
       )}
 

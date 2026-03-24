@@ -15,6 +15,7 @@ export default function NavMenu() {
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "auto";
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isOpen) setHasInteracted(true);
 
     return () => {
@@ -39,7 +40,7 @@ export default function NavMenu() {
         className={`nav-menu 
         hidden max-sm:block
         w-[80%] h-screen bg-deepBlue
-        fixed z-[1000] top-16 right-0 
+        fixed z-1000 top-16 right-0 
         ${getMenuClass()}`}
       >
         <ul className="flex flex-col items-end pt-6 pr-6 gap-6">
@@ -69,7 +70,7 @@ export default function NavMenu() {
           toggleMenu();
           setHasInteracted(true);
         }}
-        className={`bg-black hidden  fixed top-0 left-0 w-screen h-screen z-[999] ${getOverlayClass()}`}
+        className={`bg-black hidden  fixed top-0 left-0 w-screen h-screen z-999 ${getOverlayClass()}`}
       />
     </>
   );
