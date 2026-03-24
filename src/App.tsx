@@ -5,7 +5,6 @@ import RegisterModal from "./features/auth/RegisterModal";
 import Footer from "./features/Footer";
 import Header from "./features/Header";
 import NavMenu from "./features/Header/components/NavMenu";
-import useMenuStore from "./features/Header/store/useMenuStore";
 
 export default function App() {
   const openAuthModal = useModalStore((state) => state.openAuthModal);
@@ -15,7 +14,6 @@ export default function App() {
   const isRegisterModalOpen = useModalStore(
     (state) => state.isRegisterModalOpen,
   );
-  const isMenuOpen = useMenuStore(state=>state.isOpen)
   return (
     <>
       <Header />

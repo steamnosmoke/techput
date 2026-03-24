@@ -14,6 +14,7 @@ export default function useAuthInputs(): TInputs[] {
       value: email,
       placeholder: "example@swarka.ru",
       func: setEmail,
+      fieldName: "email"
     },
     {
       type: "password",
@@ -21,6 +22,7 @@ export default function useAuthInputs(): TInputs[] {
       value: password,
       placeholder: "Password123!",
       func: setPassword,
+      fieldName: "password"
     },
   ];
 }
