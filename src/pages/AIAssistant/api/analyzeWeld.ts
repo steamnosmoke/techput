@@ -14,7 +14,7 @@ export const analyzeWeld = async (file: File): Promise<AnalyzeWeldResponse> => {
   formData.append("image", file);
 
   const { data } = await axios.post<AnalyzeWeldResponse>(
-    "https://techput-production.up.railway.app/",
+    "https://techput-production.up.railway.app/api/analyze-weld",
     formData,
     {
       headers: {
