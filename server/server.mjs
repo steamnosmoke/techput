@@ -126,7 +126,6 @@
 //   console.log(`Server started on port ${PORT}`);
 // });
 
-import fetch from "node-fetch";
 
 const HF_API_KEY = process.env.HF_API_KEY;
 
