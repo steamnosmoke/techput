@@ -15,12 +15,7 @@ export const analyzeWeld = async (file: File): Promise<AnalyzeWeldResponse> => {
 
   const { data } = await axios.post<AnalyzeWeldResponse>(
     "https://techput-production.up.railway.app/api/analyze-weld",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
+    formData
   );
 
   return data;
