@@ -15,7 +15,7 @@ export default function App() {
     (state) => state.isRegisterModalOpen,
   );
   return (
-    <>
+    <div className="flex-1 overflow-y-auto pt-20 max-sm:pt-16 [webkit-overflow-scrolling:touch]">
       <Header />
       <RoutesComponent />
       <Footer />
@@ -33,6 +33,6 @@ export default function App() {
       )}
       {/* {isMenuOpen && <NavMenu />} */}
       <NavMenu />
-    </>
+    </div>
   );
 }

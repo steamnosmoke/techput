@@ -10,7 +10,7 @@ export default function Header() {
   const toggleMenu = useMenuStore((s) => s.toggleMenu);
 
   return (
-    <header className="fixed top-0 left-0 w-full h-20 max-sm:h-16 z-50">
+    <header className="fixed top-0 left-0 w-full h-40 max-sm:h-16 z-50 bg-deepBlue/90">
       {/* фон header */}
       <div className="absolute inset-0 bg-deepBlue/90 backdrop-blur-md"></div>
 
