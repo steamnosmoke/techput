@@ -3,7 +3,7 @@ import getCards from "./config/getCards";
 export default function HowItWorking() {
   const cards = getCards();
   return (
-    <section className="how w-full mt-23 max-sm:mt-8">
+    <section className="how w-full">
       <div className="container">
         <h2 className="w-full text-center text-black text-5xl max-sm:text-2xl mb-10 max-sm:mb-5">
           Как это работает?

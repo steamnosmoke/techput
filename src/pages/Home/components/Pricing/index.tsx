@@ -7,7 +7,7 @@ export default function PricingSection() {
   const features = getPoints();
 
   return (
-    <div className="w-full mt-23 max-sm:mt-16">
+    <section className="w-full">
       <div className="container">
         <div className="grid grid-cols-2 gap-8 bg-deepBlue rounded-3xl px-12  py-8 max-sm:px-4 max-sm:py-6 max-lg:grid-cols-1">
           <div className="flex flex-col">
@@ -30,9 +30,9 @@ export default function PricingSection() {
             </ul>
 
             <div className="mt-auto">
-              <div className="text-white text-3xl max-sm:text-2xl font-bold mb-1">
+              <h4 className="text-white text-3xl max-sm:text-2xl font-nk mb-1">
                 9 990 ₽ за весь курс
-              </div>
+              </h4>
               <div className="text-gray-400 text-lg max-sm:text-base mb-6">
                 Доступ открывается сразу после оплаты.
               </div>
@@ -49,6 +49,6 @@ export default function PricingSection() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

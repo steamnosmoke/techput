@@ -3,12 +3,12 @@ import getCards from "./config/getCards";
 export default function CourseForYou() {
   const cards = getCards();
   return (
-    <section className="course mt-23 max-sm:mt-16">
+    <section className="course">
       <div className="container">
         <h2 className="text-black text-4xl max-sm:text-2xl text-left max-sm:text-center">
           Курс подойдет, если вы
         </h2>
-        <ul className="flex flex-wrap gap-22 max-sm:gap-12 mt-12 max-sm:mt-6 items-center justify-between">
+        <ul className="flex flex-wrap gap-22 max-sm:gap-3 mt-12 max-sm:mt-6 items-center justify-between">
           {cards.map((el, key) => (
             <li
               key={key}

@@ -114,7 +114,7 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="flex items-center justify-center mt-23 max-sm:mt-16 max-sm:px-4">
+    <section className="flex items-center justify-center mt-23 max-sm:px-4">
       <div className="max-w-4xl w-full bg-deepBlue rounded-2xl p-8">
         <div className="grid md:grid-cols-2 gap-8 md:gap-16">
           <div>
@@ -186,7 +186,7 @@ export default function ContactForm() {
                 type="button"
                 className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors pointer-events-none ${
                   agreed
-                    ? "bg-deepBlue border-deepBlue"
+                    ? "bg-orange border-orange"
                     : "bg-white border-gray-300"
                 }`}
                 aria-hidden="true"
@@ -197,27 +197,6 @@ export default function ContactForm() {
                 Я соглашаюсь на обработку персональных данных
               </span>
             </div>
-
-            <Button
-              text={isSubmitting ? "Отправка..." : "Отправить"}
-              twclass={`!min-w-0 !w-full !px-8 !py-3 !font-medium !rounded-lg !text-xl !border-2 ${
-                agreed
-                  ? "!text-orange hover:!text-white"
-                  : "!text-gray-300 hover:!text-gray-300 !border-gray-300 hover:!bg-transparent disabled"
-              } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-            />
-
-            {submitStatus.message && (
-              <div
-                className={`p-3 rounded-lg text-sm ${
-                  submitStatus.type === "success"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {submitStatus.message}
-              </div>
-            )}
 
             <div
               className="flex items-start gap-2 cursor-pointer group"
@@ -238,9 +217,30 @@ export default function ContactForm() {
                 Я согласен получать рекламу и звонки
               </span>
             </div>
+
+            <Button
+              text={isSubmitting ? "Отправка..." : "Отправить"}
+              twclass={`!min-w-0 !w-full !px-8 !py-3 !font-medium !rounded-lg !text-xl !border-2 ${
+                agreed
+                  ? "!bg-white hover:!bg-orange !text-orange hover:!text-white"
+                  : "!text-gray-300 hover:!text-gray-300 !border-gray-300 hover:!bg-transparent disabled"
+              } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+            />
+
+            {submitStatus.message && (
+              <div
+                className={`p-3 rounded-lg text-sm ${
+                  submitStatus.type === "success"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {submitStatus.message}
+              </div>
+            )}
           </form>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

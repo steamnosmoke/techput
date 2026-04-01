@@ -3,7 +3,7 @@ import WhiteCertificate from "./components/whiteCertificate";
 
 export default function CertificatesSection() {
   return (
-    <section className="mt-23 ml-auto w-full max-sm:mt-16">
+    <section className="ml-auto w-full">
       <div className="container flex max-sm:flex-col justify-center items-center gap-40 max-sm:gap-6">
         <div className="max-w-120">
           <h2 className="text-4xl max-sm:text-2xl max-sm:text-center text-gray-900 leading-tight mb-6">
