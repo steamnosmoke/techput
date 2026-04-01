@@ -10,9 +10,14 @@ export default function Header() {
   const toggleMenu = useMenuStore((s) => s.toggleMenu);
 
   return (
-    <div className="w-screen h-20 max-sm:h-16 bg-deepBlue fixed z-1000 top-0">
+    <header
+      className="fixed top-0 left-0 w-full h-20 max-sm:h-16 
+bg-deepBlue/90 backdrop-blur-md
+pt-[env(safe-area-inset-top)]
+z-50"
+    >
       <div className="container h-full flex items-center justify-between relative">
-        <div className="fixed top-0 left-0 w-screen h-20 max-sm:h-16 bg-deepBlue z-[1000] pt-[env(safe-area-inset-top)]"/>
+        {/* <div className="fixed top-0 left-0 w-screen h-20 max-sm:h-16 bg-deepBlue z-[1000] pt-[env(safe-area-inset-top)]" /> */}
         <Link to="/" className="cursor-pointer" onClick={toggleMenu}>
           <p className="text-4xl max-sm:text-xl font-nk! text-white uppercase">
             Тех.Путь
@@ -44,6 +49,6 @@ export default function Header() {
           <Burger />
         </div>
       </div>
-    </div>
+    </header>
   );
 }

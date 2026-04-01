@@ -9,12 +9,14 @@ const Course = lazy(() => import("../../pages/Course"));
 
 export default function RoutesComponent() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/ai-assistant" element={<AIAssistant />} />
-      <Route path="/buy-access" element={<BuyCourse />} />
-      <Route path="/course" element={<Course />} />
-    </Routes>
+    <div className="pt-20 max-sm:pt-16">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/ai-assistant" element={<AIAssistant />} />
+        <Route path="/buy-access" element={<BuyCourse />} />
+        <Route path="/course" element={<Course />} />
+      </Routes>
+    </div>
   );
 }
