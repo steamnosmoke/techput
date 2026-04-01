@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <div className="w-screen h-20 max-sm:h-16 bg-deepBlue fixed z-1000 top-0">
       <div className="container h-full flex items-center justify-between relative">
-        <div className="absolute bg-deepBlue opacity-96  backdrop-blur-2xl w-[110%] h-10 -top-10 -left-1/10"></div>
+        <div className="fixed top-0 left-0 w-screen h-20 max-sm:h-16 bg-deepBlue z-[1000] pt-[env(safe-area-inset-top)]"/>
         <Link to="/" className="cursor-pointer" onClick={toggleMenu}>
           <p className="text-4xl max-sm:text-xl font-nk! text-white uppercase">
             Тех.Путь
