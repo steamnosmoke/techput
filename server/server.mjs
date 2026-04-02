@@ -126,39 +126,130 @@
 //   console.log(`Server started on port ${PORT}`);
 // });
 
+import express from "express";
+import multer from "multer";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
 
-const HF_API_KEY = process.env.HF_API_KEY;
+dotenv.config();
+
+const app = express();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+
+const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
+const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
 app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "Нет файла" });
+      return res.status(400).json({ error: "Нет изображения" });
     }
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base",
+    const base64 = req.file.buffer.toString("base64");
+
+    // 🔎 1 Detect defect через Roboflow
+    const detection = await fetch(
+      `https://detect.roboflow.com/welding-defect/1?api_key=${ROBOFLOW_KEY}`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
-          "Content-Type": "application/octet-stream",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: req.file.buffer,
+        body: base64,
       },
     );
 
-    const data = await response.json();
+    const detectionData = await detection.json();
+
+    if (!detectionData.predictions.length) {
+      return res.json({
+        hasDefect: false,
+        defectType: "no_defect",
+        severity: "low",
+        confidence: 0.9,
+        comment: "Дефекты не обнаружены",
+        recommendation: "Сварной шов выглядит корректно",
+      });
+    }
+
+    const defect = detectionData.predictions[0];
+
+    // 🧠 2 LLM объяснение через OpenRouter
+    const llm = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3-8b-instruct",
+        messages: [
+          {
+            role: "user",
+            content: `
+Обнаружен дефект сварки: ${defect.class}
+
+Верни строго JSON:
+
+{
+ "severity": "low | medium | high",
+ "comment": "короткое объяснение",
+ "recommendation": "как исправить"
+}
+
+Без markdown.
+`,
+          },
+        ],
+      }),
+    });
+
+    const llmData = await llm.json();
+
+    const text = llmData.choices?.[0]?.message?.content || "";
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = {
+        severity: "unknown",
+        comment: text,
+        recommendation: "Проверьте сварной шов вручную",
+      };
+    }
+
+    // 📦 Нормализуем координаты bounding box
+    const box = {
+      x: defect.x / detectionData.image.width,
+      y: defect.y / detectionData.image.height,
+      width: defect.width / detectionData.image.width,
+      height: defect.height / detectionData.image.height,
+    };
 
     return res.json({
       hasDefect: true,
-      defectType: "unknown",
-      severity: "unknown",
-      confidence: 0.5,
-      comment: data?.[0]?.generated_text || "Нет описания",
-      recommendation: "Проверьте вручную (тестовый режим)",
+      defectType: defect.class,
+      severity: parsed.severity,
+      confidence: defect.confidence,
+      comment: parsed.comment,
+      recommendation: parsed.recommendation,
+      box,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Ошибка HF API" });
+
+    res.status(500).json({
+      error: "Ошибка анализа",
+      details: error.message,
+    });
   }
+});
+
+app.listen(5000, () => {
+  console.log("Swarka AI server started on port 5000");
 });

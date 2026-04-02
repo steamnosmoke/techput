@@ -168,6 +168,8 @@ export default function AIAssistant() {
     }
   }, [analysisResult]);
 
+  const box = analysisResult?.box;
+
   const resetAnalysis = () => {
     setShowResults(false);
     setSelectedFile(null);
@@ -296,10 +298,22 @@ export default function AIAssistant() {
           {previewUrl && !isAnalyzing && (
             <div className="mt-6">
               <img
-                src={previewUrl}
-                alt="Предпросмотр"
-                className="w-full max-h-100 object-contain rounded-2xl border"
+                src={previewUrl || photo}
+                alt="Сварной шов"
+                className="w-full h-full object-cover"
               />
+
+              {box && (
+                <div
+                  className="absolute border-4 border-red-500 rounded-lg animate-pulse pointer-events-none"
+                  style={{
+                    left: `${(box.x - box.width / 2) * 100}%`,
+                    top: `${(box.y - box.height / 2) * 100}%`,
+                    width: `${box.width * 100}%`,
+                    height: `${box.height * 100}%`,
+                  }}
+                />
+              )}
             </div>
           )}
 
