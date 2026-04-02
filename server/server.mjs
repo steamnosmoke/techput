@@ -139,6 +139,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
 });
 
+
 const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
@@ -250,6 +251,12 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Swarka AI server started on port 5000");
+app.get("/", (req, res) => {
+  res.send("Swarka AI server is running");
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Swarka AI server started on port ${PORT}`);
 });
