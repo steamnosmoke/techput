@@ -130,15 +130,25 @@ import express from "express";
 import multer from "multer";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
 
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  }),
+);
+
+app.use(express.json({ limit: "10mb" }));
+
 const upload = multer({
   storage: multer.memoryStorage(),
 });
-
 
 const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
@@ -165,7 +175,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     const detectionData = await detection.json();
 
-    if (!detectionData.predictions.length) {
+    if (!detectionData?.predictions?.length) {
       return res.json({
         hasDefect: false,
         defectType: "no_defect",
@@ -225,11 +235,14 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     }
 
     // 📦 Нормализуем координаты bounding box
+    const imgW = detectionData?.image?.width || 1;
+    const imgH = detectionData?.image?.height || 1;
+
     const box = {
-      x: defect.x / detectionData.image.width,
-      y: defect.y / detectionData.image.height,
-      width: defect.width / detectionData.image.width,
-      height: defect.height / detectionData.image.height,
+      x: defect.x / imgW,
+      y: defect.y / imgH,
+      width: defect.width / imgW,
+      height: defect.height / imgH,
     };
 
     return res.json({
