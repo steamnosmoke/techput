@@ -163,7 +163,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     // 🔎 1 Detect defect через Roboflow
     const detection = await fetch(
-      `https://detect.roboflow.com/welding-defect/1?api_key=${ROBOFLOW_KEY}`,
+      `https://serverless.roboflow.com/welding-defect-cpmw8/1?api_key=${ROBOFLOW_KEY}`,
       {
         method: "POST",
         headers: {
