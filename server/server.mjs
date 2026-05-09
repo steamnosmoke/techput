@@ -9,8 +9,6 @@ const app = express();
 
 app.use(cors());
 
-app.options("*", cors());
-
 app.use(express.json({ limit: "10mb" }));
 
 const upload = multer({
@@ -50,10 +48,6 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     console.log("FILE NAME:", req.file.originalname);
     console.log("FILE TYPE:", req.file.mimetype);
     console.log("FILE SIZE:", req.file.size);
-
-    // =========================
-    // ROBOFLOW
-    // =========================
 
     console.log("START ROBOFLOW REQUEST");
 
@@ -97,10 +91,6 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     const defect = detectionData.predictions[0];
 
     console.log("DEFECT FOUND:", defect);
-
-    // =========================
-    // OPENROUTER
-    // =========================
 
     console.log("START OPENROUTER REQUEST");
 
@@ -158,10 +148,6 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
         recommendation: "Проверьте сварной шов вручную",
       };
     }
-
-    // =========================
-    // NORMALIZE BOX
-    // =========================
 
     const imgW = detectionData?.image?.width || 1;
     const imgH = detectionData?.image?.height || 1;
