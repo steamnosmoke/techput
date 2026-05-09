@@ -49,16 +49,30 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     console.log("FILE TYPE:", req.file.mimetype);
     console.log("FILE SIZE:", req.file.size);
 
+    // =====================================
+    // ROBOFLOW
+    // =====================================
+
     console.log("START ROBOFLOW REQUEST");
 
+    const base64Image = req.file.buffer.toString("base64");
+
     const detection = await fetch(
-      `https://serverless.roboflow.com/welding-defect-cpmw8/1?api_key=${ROBOFLOW_KEY}`,
+      "https://serverless.roboflow.com/s-workspace-bddld/workflows/detect-count-and-visualize-3",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/octet-stream",
+          "Content-Type": "application/json",
         },
-        body: req.file.buffer,
+        body: JSON.stringify({
+          api_key: ROBOFLOW_KEY,
+          inputs: {
+            image: {
+              type: "base64",
+              value: base64Image,
+            },
+          },
+        }),
       },
     );
 
@@ -75,7 +89,15 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       });
     }
 
-    if (!detectionData?.predictions?.length) {
+    // =====================================
+    // PREDICTIONS
+    // =====================================
+
+    const predictions = detectionData?.outputs?.[0]?.predictions || [];
+
+    console.log("PREDICTIONS:", predictions);
+
+    if (!predictions.length) {
       console.log("NO DEFECTS FOUND");
 
       return res.json({
@@ -88,9 +110,15 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       });
     }
 
-    const defect = detectionData.predictions[0];
+    const defect = predictions[0];
 
     console.log("DEFECT FOUND:", defect);
+
+    const defectType = defect.class || defect.class_name || "unknown";
+
+    // =====================================
+    // OPENROUTER
+    // =====================================
 
     console.log("START OPENROUTER REQUEST");
 
@@ -106,7 +134,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
           {
             role: "user",
             content: `
-Обнаружен дефект сварки: ${defect.class}
+Обнаружен дефект сварки: ${defectType}
 
 Верни строго JSON:
 
@@ -149,8 +177,13 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       };
     }
 
-    const imgW = detectionData?.image?.width || 1;
-    const imgH = detectionData?.image?.height || 1;
+    // =====================================
+    // NORMALIZE BOX
+    // =====================================
+
+    const imgW = detectionData?.outputs?.[0]?.image?.width || 1;
+
+    const imgH = detectionData?.outputs?.[0]?.image?.height || 1;
 
     const box = {
       x: defect.x / imgW,
@@ -163,7 +196,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     return res.json({
       hasDefect: true,
-      defectType: defect.class,
+      defectType,
       severity: parsed.severity,
       confidence: defect.confidence,
       comment: parsed.comment,
