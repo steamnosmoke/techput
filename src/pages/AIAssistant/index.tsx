@@ -156,6 +156,7 @@ export default function AIAssistant() {
 
     if (!analysisResult.hasDefect) return "Шов в хорошем состоянии";
 
+    
     switch (analysisResult.severity) {
       case "low":
         return "Есть небольшие отклонения";
