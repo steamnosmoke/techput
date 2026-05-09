@@ -21,8 +21,8 @@ const upload = multer({
 const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
-console.log("ROBOFLOW_KEY:", !!ROBOFLOW_KEY);
-console.log("OPENROUTER_KEY:", !!OPENROUTER_KEY);
+console.log("ROBOFLOW_KEY EXISTS:", !!ROBOFLOW_KEY);
+console.log("OPENROUTER_KEY EXISTS:", !!OPENROUTER_KEY);
 
 app.get("/", (req, res) => {
   console.log("GET /");
@@ -50,7 +50,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     console.log("FILE SIZE:", req.file.size);
 
     // =====================================
-    // ROBOFLOW
+    // ROBOFLOW WORKFLOW
     // =====================================
 
     console.log("START ROBOFLOW REQUEST");
@@ -83,6 +83,8 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     console.log("ROBOFLOW RESPONSE:", JSON.stringify(detectionData, null, 2));
 
     if (!detection.ok) {
+      console.log("ROBOFLOW ERROR");
+
       return res.status(500).json({
         error: "Ошибка Roboflow",
         details: detectionData,
@@ -93,9 +95,15 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     // PREDICTIONS
     // =====================================
 
-    const predictions = detectionData?.outputs?.[0]?.predictions || [];
+    const predictions =
+      detectionData?.outputs?.[0]?.predictions?.predictions || [];
 
-    console.log("PREDICTIONS:", predictions);
+    console.log(
+      "RAW PREDICTIONS:",
+      JSON.stringify(detectionData?.outputs?.[0]?.predictions, null, 2),
+    );
+
+    console.log("PREDICTIONS ARRAY:", predictions);
 
     if (!predictions.length) {
       console.log("NO DEFECTS FOUND");
@@ -114,7 +122,11 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     console.log("DEFECT FOUND:", defect);
 
-    const defectType = defect.class || defect.class_name || "unknown";
+    const defectType =
+      defect.class ||
+      defect.class_name ||
+      defect.predicted_classes ||
+      "unknown";
 
     // =====================================
     // OPENROUTER
@@ -181,15 +193,17 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     // NORMALIZE BOX
     // =====================================
 
-    const imgW = detectionData?.outputs?.[0]?.image?.width || 1;
+    const imgW =
+      detectionData?.outputs?.[0]?.image?.width || defect.image?.width || 1;
 
-    const imgH = detectionData?.outputs?.[0]?.image?.height || 1;
+    const imgH =
+      detectionData?.outputs?.[0]?.image?.height || defect.image?.height || 1;
 
     const box = {
-      x: defect.x / imgW,
-      y: defect.y / imgH,
-      width: defect.width / imgW,
-      height: defect.height / imgH,
+      x: (defect.x || 0) / imgW,
+      y: (defect.y || 0) / imgH,
+      width: (defect.width || 0) / imgW,
+      height: (defect.height || 0) / imgH,
     };
 
     console.log("FINAL RESPONSE READY");
@@ -198,7 +212,7 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       hasDefect: true,
       defectType,
       severity: parsed.severity,
-      confidence: defect.confidence,
+      confidence: defect.confidence || 0,
       comment: parsed.comment,
       recommendation: parsed.recommendation,
       box,
