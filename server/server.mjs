@@ -1,134 +1,5 @@
-// import express from "express";
-// import cors from "cors";
-// import multer from "multer";
-// import dotenv from "dotenv";
-// import OpenAI from "openai";
-
-// dotenv.config();
-
-// const app = express();
-
-// const upload = multer({
-//   storage: multer.memoryStorage(),
-//   limits: { fileSize: 10 * 1024 * 1024 },
-// });
-
-// app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept",
-//   );
-
-//   if (req.method === "OPTIONS") {
-//     return res.sendStatus(200);
-//   }
-
-//   next();
-// });
-
-// app.use(express.json());
-
-// const client = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
-// });
-
-// app.get("/", (req, res) => {
-//   res.json({ ok: true, message: "Swarka backend is running" });
-// });
-
-// app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({
-//         error: "Файл изображения не передан",
-//       });
-//     }
-
-//     const mimeType = req.file.mimetype;
-//     const supportedMimeTypes = [
-//       "image/jpeg",
-//       "image/jpg",
-//       "image/png",
-//       "image/webp",
-//     ];
-
-//     if (!supportedMimeTypes.includes(mimeType)) {
-//       return res.status(400).json({
-//         error: "Поддерживаются только JPG, PNG и WEBP",
-//       });
-//     }
-
-//     const base64Image = req.file.buffer.toString("base64");
-//     const dataUrl = `data:${mimeType};base64,${base64Image}`;
-
-//     const response = await client.responses.create({
-//       model: "gpt-4.1-mini",
-//       input: [
-//         {
-//           role: "user",
-//           content: [
-//             {
-//               type: "input_text",
-//               text: `Проанализируй фото сварного шва и верни строго JSON:
-// {
-//   "hasDefect": boolean,
-//   "defectType": string,
-//   "severity": "low" | "medium" | "high" | "unknown",
-//   "confidence": number,
-//   "comment": string,
-//   "recommendation": string
-// }
-
-// Допустимые defectType:
-// "no_defect", "porosity", "crack", "undercut", "burn_through",
-// "lack_of_fusion", "slag_inclusion", "spatter", "unknown"
-
-// Не добавляй markdown и пояснения вне JSON.`,
-//             },
-//             {
-//               type: "input_image",
-//               image_url: dataUrl,
-//               detail: "high",
-//             },
-//           ],
-//         },
-//       ],
-//     });
-
-//     let parsed;
-
-//     try {
-//       parsed = JSON.parse(response.output_text);
-//     } catch {
-//       return res.status(500).json({
-//         error: "Модель вернула невалидный JSON",
-//         raw: response.output_text,
-//       });
-//     }
-
-//     return res.json(parsed);
-//   } catch (error) {
-//     console.error("Analyze error:", error);
-
-//     return res.status(500).json({
-//       error: "Ошибка при анализе изображения",
-//       details: error?.message || "Unknown error",
-//       cause: error?.cause?.code || null,
-//     });
-//   }
-// });
-
-// const PORT = process.env.PORT || 5000;
-
-// app.listen(PORT, () => {
-//   console.log(`Server started on port ${PORT}`);
-// });
-
 import express from "express";
 import multer from "multer";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -136,46 +7,83 @@ dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
-  }),
-);
+app.use(cors());
+
+app.options("*", cors());
 
 app.use(express.json({ limit: "10mb" }));
 
 const upload = multer({
   storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
 });
 
 const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
+console.log("ROBOFLOW_KEY:", !!ROBOFLOW_KEY);
+console.log("OPENROUTER_KEY:", !!OPENROUTER_KEY);
+
+app.get("/", (req, res) => {
+  console.log("GET /");
+
+  res.send("Swarka AI server is running");
+});
+
 app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
   try {
+    console.log("=================================");
+    console.log("REQUEST START");
+    console.log("TIME:", new Date().toISOString());
+
     if (!req.file) {
-      return res.status(400).json({ error: "Нет изображения" });
+      console.log("NO FILE");
+
+      return res.status(400).json({
+        error: "Нет изображения",
+      });
     }
 
-    const base64 = req.file.buffer.toString("base64");
+    console.log("FILE RECEIVED");
+    console.log("FILE NAME:", req.file.originalname);
+    console.log("FILE TYPE:", req.file.mimetype);
+    console.log("FILE SIZE:", req.file.size);
 
-    // 🔎 1 Detect defect через Roboflow
+    // =========================
+    // ROBOFLOW
+    // =========================
+
+    console.log("START ROBOFLOW REQUEST");
+
     const detection = await fetch(
       `https://serverless.roboflow.com/welding-defect-cpmw8/1?api_key=${ROBOFLOW_KEY}`,
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/octet-stream",
         },
-        body: base64,
+        body: req.file.buffer,
       },
     );
 
+    console.log("ROBOFLOW STATUS:", detection.status);
+
     const detectionData = await detection.json();
 
+    console.log("ROBOFLOW RESPONSE:", JSON.stringify(detectionData, null, 2));
+
+    if (!detection.ok) {
+      return res.status(500).json({
+        error: "Ошибка Roboflow",
+        details: detectionData,
+      });
+    }
+
     if (!detectionData?.predictions?.length) {
+      console.log("NO DEFECTS FOUND");
+
       return res.json({
         hasDefect: false,
         defectType: "no_defect",
@@ -188,7 +96,14 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     const defect = detectionData.predictions[0];
 
-    // 🧠 2 LLM объяснение через OpenRouter
+    console.log("DEFECT FOUND:", defect);
+
+    // =========================
+    // OPENROUTER
+    // =========================
+
+    console.log("START OPENROUTER REQUEST");
+
     const llm = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -206,9 +121,9 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 Верни строго JSON:
 
 {
- "severity": "low | medium | high",
- "comment": "короткое объяснение",
- "recommendation": "как исправить"
+  "severity": "low | medium | high",
+  "comment": "короткое объяснение",
+  "recommendation": "как исправить"
 }
 
 Без markdown.
@@ -218,15 +133,25 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       }),
     });
 
+    console.log("OPENROUTER STATUS:", llm.status);
+
     const llmData = await llm.json();
 
-    const text = llmData.choices?.[0]?.message?.content || "";
+    console.log("OPENROUTER RESPONSE:", JSON.stringify(llmData, null, 2));
+
+    const text = llmData?.choices?.[0]?.message?.content || "";
+
+    console.log("LLM TEXT:", text);
 
     let parsed;
 
     try {
       parsed = JSON.parse(text);
-    } catch {
+
+      console.log("JSON PARSED SUCCESS");
+    } catch (e) {
+      console.log("JSON PARSE FAILED");
+
       parsed = {
         severity: "unknown",
         comment: text,
@@ -234,7 +159,10 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       };
     }
 
-    // 📦 Нормализуем координаты bounding box
+    // =========================
+    // NORMALIZE BOX
+    // =========================
+
     const imgW = detectionData?.image?.width || 1;
     const imgH = detectionData?.image?.height || 1;
 
@@ -244,6 +172,8 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       width: defect.width / imgW,
       height: defect.height / imgH,
     };
+
+    console.log("FINAL RESPONSE READY");
 
     return res.json({
       hasDefect: true,
@@ -255,17 +185,15 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       box,
     });
   } catch (error) {
+    console.error("=================================");
+    console.error("SERVER ERROR");
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: "Ошибка анализа",
-      details: error.message,
+      details: error?.message || "Unknown error",
     });
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("Swarka AI server is running");
 });
 
 const PORT = process.env.PORT || 5000;
