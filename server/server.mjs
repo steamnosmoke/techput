@@ -37,6 +37,7 @@ const MODELS = [
 // =========================
 
 const DEFECT_MAP = {
+  uneven_width: "Неравномерная ширина",
   inclusion: "Шлаковое включение",
   crack: "Трещина",
   porosity: "Пористость",
@@ -184,6 +185,24 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     const predictions =
       detectionData?.outputs?.[0]?.predictions?.predictions || [];
+
+    // =========================
+    // IMAGE SIZE
+    // =========================
+
+    const dimensions = sizeOf(req.file.buffer);
+
+    const imgW = dimensions.width || 1;
+    const imgH = dimensions.height || 1;
+
+    console.log("IMAGE SIZE:", {
+      width: imgW,
+      height: imgH,
+    });
+
+    console.log("RAW ROBOFLOW PREDICTIONS:");
+
+    console.dir(predictions, { depth: null });
 
     // =========================
     // NO DEFECTS
