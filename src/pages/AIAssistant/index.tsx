@@ -520,15 +520,18 @@ export default function AIAssistant() {
                   {analysisResult?.defects?.map((defect, index) => {
                     if (!defect.box) return null;
 
+                    const { x, y, width, height, imageWidth, imageHeight } =
+                      defect.box;
+
                     return (
                       <div
                         key={index}
                         className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
                         style={{
-                          left: `${(defect.box.x - defect.box.width / 2) * 100}%`,
-                          top: `${(defect.box.y - defect.box.height / 2) * 100}%`,
-                          width: `${defect.box.width * 100}%`,
-                          height: `${defect.box.height * 100}%`,
+                          left: `${((x - width / 2) / imageWidth) * 100}%`,
+                          top: `${((y - height / 2) / imageHeight) * 100}%`,
+                          width: `${(width / imageWidth) * 100}%`,
+                          height: `${(height / imageHeight) * 100}%`,
                         }}
                       />
                     );
