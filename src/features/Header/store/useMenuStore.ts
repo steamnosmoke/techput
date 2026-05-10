@@ -3,7 +3,7 @@ import type { TMenuStore } from "../types";
 
 const useMenuStore = create<TMenuStore>()((set) => ({
   isOpen: false,
-  toggleMenu: () => set((state) => ({ isOpen: !state.isOpen })),
+  toggleMenu: (v) => set({ isOpen: v }),
 }));
 
 export default useMenuStore;

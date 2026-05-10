@@ -11,18 +11,18 @@ export default function Banner() {
           style={{ backgroundImage: `url(${bg})` }}
         >
           <div>
-            <h1 className="text-6xl max-sm:text-2xl text-white uppercase mb-4 max-sm:mb-2">
+            <h1 className="text-6xl max-sm:text-2xl max-md:text-center text-white uppercase mb-4 max-sm:mb-2">
               Освой сварку
               <br />с AI-помощником
             </h1>
-            <p className="text-4xl max-sm:text-xl text-stone-300">
+            <p className="text-4xl max-sm:text-xl text-stone-300 max-md:text-center">
               Профессия, практика и технологии в одном курсе
             </p>
           </div>
           <Link to={"/buy-access"}>
             <Button
               text={"Начать обучение"}
-              twclass="max-sm:!text-xl max-sm:!w-full max-sm:!border-2"
+              twclass="max-sm:!text-xl  max-md:w-80! max-sm:!border-2 max-md:text-center"
             />
           </Link>
           <img

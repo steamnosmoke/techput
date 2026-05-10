@@ -9,16 +9,13 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+import { useChatStore } from "./store/chatStore";
+
 import photo from "./images/photo.png";
 
 import { analyzeWeld, type AnalyzeWeldResponse } from "./api/analyzeWeld";
 
 import { weldingChat } from "./api/weldingChat";
-
-type ChatMessage = {
-  type: "user" | "ai";
-  text: string;
-};
 
 export default function AIAssistant() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -26,7 +23,12 @@ export default function AIAssistant() {
   const [isDragging, setIsDragging] = useState(false);
 
   const [textInput, setTextInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const {
+    messages,
+    addMessage,
+    isLoading: isChatLoading,
+    setLoading,
+  } = useChatStore();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -106,34 +108,37 @@ export default function AIAssistant() {
 
     const userMessage = textInput;
 
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        type: "user",
-        text: userMessage,
-      },
-    ]);
+    addMessage({
+      role: "user",
+      text: userMessage,
+    });
 
     setTextInput("");
 
-    try {
-      const answer = await weldingChat(userMessage);
+    setLoading(true);
 
-      setChatMessages((prev) => [
-        ...prev,
+    try {
+      const updatedMessages = [
+        ...messages,
         {
-          type: "ai",
-          text: answer,
+          role: "user" as const,
+          text: userMessage,
         },
-      ]);
+      ];
+
+      const answer = await weldingChat(updatedMessages);
+
+      addMessage({
+        role: "assistant",
+        text: answer,
+      });
     } catch {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          type: "ai",
-          text: "Ошибка AI сервиса",
-        },
-      ]);
+      addMessage({
+        role: "assistant",
+        text: "Ошибка AI сервиса",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -276,25 +281,24 @@ export default function AIAssistant() {
       {/* CHAT */}
       {/* ===================================== */}
 
-      <div className="bg-white rounded-3xl p-6 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10 mb-6">
+      <div className="bg-white rounded-3xl p-6 pr-2 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <MessageSquare className="w-5 h-5 text-[#DD6207]" />
 
           <h3 className="font-semibold text-[#0C0D33]">Задайте свой вопрос</h3>
         </div>
-
-        {chatMessages.length > 0 && (
-          <div className="space-y-4 mb-4 max-h-60 overflow-y-auto">
-            {chatMessages.map((msg, index) => (
+        {(messages.length > 0 || isChatLoading) && (
+          <div className="space-y-4 mb-4 min-h-80 max-h-120 overflow-y-auto pr-4">
+            {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
+                  msg.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
                   className={`max-w-[80%] p-4 rounded-2xl ${
-                    msg.type === "user"
+                    msg.role === "user"
                       ? "bg-[#0C0D33] text-white"
                       : "bg-gray-100 text-[#0C0D33]"
                   }`}
@@ -306,6 +310,25 @@ export default function AIAssistant() {
           </div>
         )}
 
+        
+        {isChatLoading && (
+          <div className="flex justify-start mb-4">
+            <div className="bg-gray-100 text-[#0C0D33] px-4 py-3 rounded-2xl">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
+                <span
+                  className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                  style={{ animationDelay: "0.4s" }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
         <form
           onSubmit={handleTextSubmit}
           className="flex gap-3 max-sm:flex-col"

@@ -12,7 +12,7 @@
 @theme {
   --color-deepBlue: #0c0d33;
   --color-darkBg: #0f172a;
-  --color-orange: #DD6208;
+  --color-orange: #dd6208;
 
   --font-rubik: "Rubik", sans-serif;
   --font-nk: "NK89", sans-serif;
@@ -20,23 +20,32 @@
   --breakpoint-sm: 450px;
 }
 
-.container{
+.container {
   @apply mx-auto px-5 max-w-360 min-w-0 max-sm:px-2.5;
 }
 
-*{
+* {
   @apply font-rubik;
 }
 
-h1,h2,h3,h4,h5, li, button {
+h1,
+h2,
+h3,
+h4,
+h5,
+li,
+button {
   @apply font-nk;
 }
 
-section{
-  @apply mt-23 max-sm:mt-10
+section {
+  @apply mt-23 max-sm:mt-10;
 }
 
-html, body {
+
+html,
+body {
+  
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
 }

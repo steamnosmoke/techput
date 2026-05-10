@@ -1,6 +1,6 @@
 export type TMenuStore = {
     isOpen: boolean;
-    toggleMenu: () => void;
+    toggleMenu: (v:boolean) => void;
 }
 
 export type TNav = {

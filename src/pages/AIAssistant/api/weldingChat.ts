@@ -1,12 +1,12 @@
 import axios from "axios";
-
-export async function weldingChat(message: string) {
+interface Message {
+  role: "user" | "assistant";
+  text: string;
+}
+export async function weldingChat(messages: Message[]) {
   const { data } = await axios.post(
     "https://techput-production-7a9e.up.railway.app/api/welding-chat",
-    {
-      message,
-    },
+    { messages },
   );
-
   return data.answer;
 }

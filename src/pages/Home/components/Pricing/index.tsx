@@ -31,7 +31,7 @@ export default function PricingSection() {
 
             <div className="mt-auto">
               <h4 className="text-white text-3xl max-sm:text-2xl font-nk mb-1">
-                9 990 ₽ за весь курс
+                29 990 ₽ за весь курс
               </h4>
               <div className="text-gray-400 text-lg max-sm:text-base mb-6">
                 Доступ открывается сразу после оплаты.

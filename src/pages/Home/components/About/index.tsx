@@ -5,14 +5,14 @@ export default function About() {
   return (
     <section className="relative">
       <div className="container">
-        <h2 className="text-5xl max-sm:text-2xl text-center mb-10 max-sm:mb-3 sticky top-[10%] ">
+        <h2 className="text-5xl max-sm:text-2xl text-center mb-10 max-sm:mb-3 sticky top-[12%] max-md:top-1/11 ">
           О профессии
         </h2>
-        <ul className="w-full flex flex-col gap-3 sticky top-[18%] max-sm:top-[15%]">
+        <ul className="w-full flex flex-col gap-3 sticky top-[20%] max-sm:top-[12%]">
           {cards.map((el, key) => (
             <li
               key={key}
-              className={`pt-18 max-sm:pt-4 pl-18 max-sm:pl-4 pr-40 max-sm:pr-4 h-105 max-sm:h-40 sticky top-[18%] max-sm:top-[15%] flex justify-between  max-sm:rounded-3xl`}
+              className={`pt-18 max-sm:pt-4 pl-18 max-sm:pl-4 pr-40 max-sm:pr-4 h-105 max-sm:h-40 sticky top-[20%] max-sm:top-[15%] flex justify-between rounded-3xl`}
               style={{
                 background: `url(${el.bg})`,
                 backgroundPosition: "right",

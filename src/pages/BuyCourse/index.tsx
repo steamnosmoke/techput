@@ -119,7 +119,7 @@ export default function BuyCourse() {
 
               <div className="mt-4">
                 <h4 className="text-4xl max-sm:text-2xl font-nk">
-                  9 990 ₽
+                  29 990 ₽
                 </h4>
               </div>
             </div>

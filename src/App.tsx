@@ -15,7 +15,7 @@ export default function App() {
     (state) => state.isRegisterModalOpen,
   );
   return (
-    <div className="max-sm:flex-1 max-sm:overflow-y-auto max-sm:[webkit-overflow-scrolling:touch]">
+    <div className="max-sm:flex-1 pt-6 max-md:pt-0">
       <Header />
       <RoutesComponent />
       <Footer />

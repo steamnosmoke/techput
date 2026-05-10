@@ -39,11 +39,11 @@ export default function NavMenu() {
       <div
         className={`nav-menu 
         hidden max-sm:block
-        w-[80%] h-screen bg-deepBlue
-        fixed z-1000 top-16 right-0 
+        w-full h-screen bg-deepBlue/80
+        fixed z-45 top-0 right-0 backdrop-blur-sm
         ${getMenuClass()}`}
       >
-        <ul className="flex flex-col items-end pt-6 pr-6 gap-6">
+        <ul className="flex flex-col items-end pt-21 pr-6 gap-6">
           {navs.map((el, key) => (
             <NavLink
               key={key}
@@ -53,7 +53,7 @@ export default function NavMenu() {
                   e.preventDefault();
                 }
                 el.action();
-                toggleMenu();
+                toggleMenu(!isOpen);
               }}
             >
               <li className="text-white text-right text-xl max-sm:text-lg cursor-pointer transition-all duration-200 hover:text-orange-300">
@@ -67,10 +67,10 @@ export default function NavMenu() {
       {/* OVERLAY */}
       <div
         onClick={() => {
-          toggleMenu();
+          toggleMenu(false);
           setHasInteracted(true);
         }}
-        className={`bg-black hidden  fixed top-0 left-0 w-screen h-screen z-999 ${getOverlayClass()}`}
+        className={`bg-black hidden  fixed top-0 left-0 w-screen h-screen z-40 ${getOverlayClass()}`}
       />
     </>
   );

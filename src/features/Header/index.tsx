@@ -10,14 +10,13 @@ export default function Header() {
   const toggleMenu = useMenuStore((s) => s.toggleMenu);
 
   return (
-    <header className="fixed top-0 left-0 w-full h-20 max-sm:h-16 z-50 bg-deepBlue/90">
-      {/* фон header */}
-      <div className="absolute inset-0 bg-deepBlue/90 backdrop-blur-md"></div>
-
-      {/* safe-area сверху */}
-      <div className="h-[env(safe-area-inset-top)] bg-deepBlue/90 backdrop-blur-md"></div>
-      <div className="container h-full flex items-center justify-between relative">
-        <Link to="/" className="cursor-pointer" onClick={toggleMenu}>
+    <header className="fixed left-1/2 top-4 max-md:inset-0 w-[calc(100%-24px)] max-md:w-full h-20 md:-translate-x-1/2 max-sm:h-16 z-50">
+      <div className="container w-full! h-full flex items-center justify-between relative bg-deepBlue/80 px-10! md:rounded-4xl mx-auto! backdrop-blur-sm md:border-4 md:border-deepBlue">
+        <Link
+          to="/"
+          className="cursor-pointer"
+          onClick={() => toggleMenu(false)}
+        >
           <p className="text-4xl max-sm:text-xl font-nk! text-white uppercase">
             Тех.Путь
           </p>

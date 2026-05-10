@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import dotenv from "dotenv";
 import cors from "cors";
+import sizeOf from "image-size";
 
 dotenv.config();
 
@@ -201,9 +202,10 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     // IMAGE SIZE
     // =========================
 
-    const imgW = detectionData?.outputs?.[0]?.image?.width || 1;
+    const dimensions = sizeOf(req.file.buffer);
 
-    const imgH = detectionData?.outputs?.[0]?.image?.height || 1;
+    const imgW = dimensions.width || 1;
+    const imgH = dimensions.height || 1;
 
     // =========================
     // PROCESS DEFECTS
@@ -257,7 +259,10 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
         return {
           defectType,
           severity: parsed?.severity || "medium",
-          confidence: defect.confidence || 0,
+          confidence:
+            defect.confidence > 1
+              ? defect.confidence / 100
+              : defect.confidence || 0,
           comment:
             parsed?.comment || "Требуется дополнительная проверка дефекта.",
           recommendation:
@@ -293,55 +298,25 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
 app.post("/api/welding-chat", async (req, res) => {
   try {
-    const { message } = req.body;
-
-    if (!message) {
-      return res.status(400).json({
-        error: "Нет сообщения",
-      });
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "Нет сообщений" });
     }
-
-    const answer = await askLLM([
+    const history = messages.slice(-10);
+    const formattedMessages = [
       {
         role: "system",
-        content: `
-Ты AI-помощник по сварке.
-
-Ты отвечаешь только на темы:
-- TIG
-- MIG/MAG
-- MMA
-- сварочные дефекты
-- сварочные аппараты
-- электроды
-- металлы
-- режимы сварки
-
-Если вопрос не связан со сваркой —
-сообщи что специализируешься только на сварке.
-
-Отвечай:
-- кратко
-- профессионально
-- только на русском
-`,
+        content: ` Ты AI-помощник по сварке. Ты отвечаешь только на темы: - TIG - MIG/MAG - MMA - сварочные дефекты - сварочные аппараты - электроды - металлы - режимы сварки Если вопрос не связан со сваркой — сообщи что специализируешься только на сварке. Отвечай: - кратко - профессионально - только на русском `,
       },
-      {
-        role: "user",
-        content: message,
-      },
-    ]);
-
-    return res.json({
-      answer,
-    });
+      ...history.map((msg) => ({ role: msg.role, content: msg.text })),
+    ];
+    const answer = await askLLM(formattedMessages);
+    return res.json({ answer });
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      error: "Ошибка AI",
-      details: error?.message || "Unknown error",
-    });
+    return res
+      .status(500)
+      .json({ error: "Ошибка AI", details: error?.message || "Unknown error" });
   }
 });
 
