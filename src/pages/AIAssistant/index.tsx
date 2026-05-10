@@ -153,19 +153,43 @@ export default function AIAssistant() {
       return [
         {
           title: "Дефекты не обнаружены",
+          count: 0,
           cause: analysisResult.comment || "Шов визуально выглядит корректно",
-
           recommendation:
             analysisResult.recommendation || "Корректировка не требуется",
         },
       ];
     }
 
-    return analysisResult.defects.map((defect) => ({
-      title: defect.defectType,
-      cause: defect.comment,
-      recommendation: defect.recommendation,
-    }));
+    const grouped = analysisResult.defects.reduce(
+      (acc, defect) => {
+        const key = defect.defectType;
+
+        if (!acc[key]) {
+          acc[key] = {
+            title: defect.defectType,
+            count: 1,
+            cause: defect.comment,
+            recommendation: defect.recommendation,
+          };
+        } else {
+          acc[key].count += 1;
+        }
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          title: string;
+          count: number;
+          cause: string;
+          recommendation: string;
+        }
+      >,
+    );
+
+    return Object.values(grouped);
   }, [analysisResult]);
 
   // =====================================
@@ -243,7 +267,6 @@ export default function AIAssistant() {
   // BOX
   // =====================================
 
-  const box = firstDefect?.box;
 
   // =====================================
   // RESET
@@ -431,17 +454,38 @@ export default function AIAssistant() {
                 className="w-full h-auto rounded-2xl"
               />
 
-              {box && (
-                <div
-                  className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
-                  style={{
-                    left: `${(box.x - box.imageWidth / 2) * 100}%`,
-                    top: `${(box.y - box.imageHeight / 2) * 100}%`,
-                    width: `${(box.width / box.imageWidth) * 100}%`,
-                    height: `${(box.height / box.imageHeight) * 100}%`,
-                  }}
-                />
-              )}
+              {analysisResult?.defects?.map((defect, index) => {
+                const box = defect.box;
+
+                if (!box) return null;
+
+                const left = Math.max(
+                  0,
+                  ((box.x - box.width / 2) / box.imageWidth) * 100,
+                );
+
+                const top = Math.max(
+                  0,
+                  ((box.y - box.height / 2) / box.imageHeight) * 100,
+                );
+
+                const width = (box.width / box.imageWidth) * 100;
+
+                const height = (box.height / box.imageHeight) * 100;
+
+                return (
+                  <div
+                    key={index}
+                    className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
+                    style={{
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      width: `${width}%`,
+                      height: `${height}%`,
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
 
@@ -586,6 +630,12 @@ export default function AIAssistant() {
 
                   <h3 className="text-lg font-bold text-[#0C0D33]">
                     {defect.title}
+
+                    {defect.count > 1 && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        × {defect.count}
+                      </span>
+                    )}
                   </h3>
                 </div>
 
@@ -700,7 +750,7 @@ function getParametersByDefect(defectType: string | undefined) {
         {
           name: "Защитный газ",
           status: "needs_adjustment",
-          current: "Возможны перебои",
+          current: "Нестабильная подача",
           recommended: "Проверить подачу газа",
         },
       ];
@@ -711,13 +761,141 @@ function getParametersByDefect(defectType: string | undefined) {
           name: "Температурный режим",
           status: "needs_adjustment",
           current: "Нестабильный",
-          recommended: "Проверить охлаждение",
+          recommended: "Контролировать охлаждение",
         },
         {
-          name: "Материал",
+          name: "Подготовка материала",
           status: "needs_adjustment",
-          current: "Требует проверки",
-          recommended: "Проверить совместимость",
+          current: "Недостаточная",
+          recommended: "Проверить совместимость металлов",
+        },
+      ];
+
+    case "Шлаковое включение":
+      return [
+        {
+          name: "Очистка шва",
+          status: "needs_adjustment",
+          current: "Недостаточная",
+          recommended: "Удалять шлак между проходами",
+        },
+        {
+          name: "Техника сварки",
+          status: "needs_adjustment",
+          current: "Нарушена",
+          recommended: "Снизить скорость движения",
+        },
+      ];
+
+    case "Разбрызгивание металла":
+      return [
+        {
+          name: "Сварочный ток",
+          status: "needs_adjustment",
+          current: "Завышен",
+          recommended: "Уменьшить ток",
+        },
+        {
+          name: "Подача проволоки",
+          status: "needs_adjustment",
+          current: "Несбалансирована",
+          recommended: "Настроить скорость подачи",
+        },
+      ];
+
+    case "Непровар":
+      return [
+        {
+          name: "Глубина провара",
+          status: "needs_adjustment",
+          current: "Недостаточная",
+          recommended: "Увеличить ток",
+        },
+        {
+          name: "Скорость сварки",
+          status: "needs_adjustment",
+          current: "Слишком высокая",
+          recommended: "Замедлить движение",
+        },
+      ];
+
+    case "Прожог":
+      return [
+        {
+          name: "Сварочный ток",
+          status: "needs_adjustment",
+          current: "Слишком высокий",
+          recommended: "Снизить ток",
+        },
+        {
+          name: "Толщина металла",
+          status: "needs_adjustment",
+          current: "Недостаточно учтена",
+          recommended: "Использовать меньший нагрев",
+        },
+      ];
+
+    case "Деформация шва":
+      return [
+        {
+          name: "Тепловложение",
+          status: "needs_adjustment",
+          current: "Избыточное",
+          recommended: "Снизить нагрев",
+        },
+        {
+          name: "Фиксация деталей",
+          status: "needs_adjustment",
+          current: "Недостаточная",
+          recommended: "Использовать зажимы",
+        },
+      ];
+
+    case "Наплыв":
+      return [
+        {
+          name: "Скорость сварки",
+          status: "needs_adjustment",
+          current: "Слишком низкая",
+          recommended: "Увеличить скорость",
+        },
+        {
+          name: "Количество металла",
+          status: "needs_adjustment",
+          current: "Избыточное",
+          recommended: "Уменьшить подачу",
+        },
+      ];
+
+    case "Кратер":
+      return [
+        {
+          name: "Завершение шва",
+          status: "needs_adjustment",
+          current: "Резкое прерывание",
+          recommended: "Плавно завершать сварку",
+        },
+        {
+          name: "Заполнение кратера",
+          status: "needs_adjustment",
+          current: "Недостаточное",
+          recommended: "Добавить металл в конце шва",
+        },
+      ];
+
+    case "Неравномерная ширина":
+      return [
+        {
+          name: "Скорость движения",
+          status: "needs_adjustment",
+          current: "Нестабильная",
+          recommended: "Держать равномерную скорость",
+        },
+        {
+          name: "Положение электрода",
+          status: "needs_adjustment",
+          current: "Нестабильное",
+          recommended: "Стабилизировать угол",
         },
       ];
 

@@ -287,7 +287,6 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
             y: defect.y || 0,
             width: defect.width || 0,
             height: defect.height || 0,
-
             imageWidth: imgW,
             imageHeight: imgH,
           },
