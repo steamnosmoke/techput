@@ -221,11 +221,6 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
     // IMAGE SIZE
     // =========================
 
-    const dimensions = sizeOf(req.file.buffer);
-
-    const imgW = dimensions.width || 1;
-    const imgH = dimensions.height || 1;
-
     // =========================
     // PROCESS DEFECTS
     // =========================
