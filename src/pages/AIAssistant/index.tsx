@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import {
   Upload,
   AlertCircle,
@@ -10,38 +10,60 @@ import {
 } from "lucide-react";
 
 import photo from "./images/photo.png";
+
 import { analyzeWeld, type AnalyzeWeldResponse } from "./api/analyzeWeld";
+
 import { weldingChat } from "./api/weldingChat";
 
-type ChatMessage = { type: "user" | "ai"; text: string };
+type ChatMessage = {
+  type: "user" | "ai";
+  text: string;
+};
 
 export default function AIAssistant() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
   const [textInput, setTextInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
+
   const [analyzeError, setAnalyzeError] = useState("");
+
   const [analysisResult, setAnalysisResult] =
     useState<AnalyzeWeldResponse | null>(null);
+
+  // =====================================
+  // FILE SELECT
+  // =====================================
 
   const handleFileSelect = (file: File | null) => {
     if (!file) return;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+
     if (!allowedTypes.includes(file.type)) {
       setAnalyzeError("Поддерживаются только JPG, PNG и WEBP");
       return;
     }
 
     setAnalyzeError("");
+
     setSelectedFile(file);
+
     setPreviewUrl(URL.createObjectURL(file));
+
     setShowResults(false);
+
     setAnalysisResult(null);
   };
+
+  // =====================================
+  // IMAGE ANALYSIS
+  // =====================================
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -51,13 +73,16 @@ export default function AIAssistant() {
 
     try {
       setIsAnalyzing(true);
+
       setAnalyzeError("");
 
       const result = await analyzeWeld(selectedFile);
 
       setAnalysisResult(result);
+
       setShowResults(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setAnalyzeError(
         error?.response?.data?.error ||
@@ -68,73 +93,79 @@ export default function AIAssistant() {
     }
   };
 
- const handleTextSubmit = async (e: React.FormEvent) => {
-   e.preventDefault();
+  // =====================================
+  // CHAT
+  // =====================================
 
-   if (!textInput.trim()) return;
+  const handleTextSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-   const userMessage = textInput;
+    if (!textInput.trim()) return;
 
-   setChatMessages((prev) => [
-     ...prev,
-     {
-       type: "user",
-       text: userMessage,
-     },
-   ]);
+    const userMessage = textInput;
 
-   setTextInput("");
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        type: "user",
+        text: userMessage,
+      },
+    ]);
 
-   try {
-     const answer = await weldingChat(userMessage);
+    setTextInput("");
 
-     setChatMessages((prev) => [
-       ...prev,
-       {
-         type: "ai",
-         text: answer,
-       },
-     ]);
-   } catch {
-     setChatMessages((prev) => [
-       ...prev,
-       {
-         type: "ai",
-         text: "Ошибка AI сервиса",
-       },
-     ]);
-   }
- };
+    try {
+      const answer = await weldingChat(userMessage);
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          text: answer,
+        },
+      ]);
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          text: "Ошибка AI сервиса",
+        },
+      ]);
+    }
+  };
+
+  // =====================================
+  // DEFECTS
+  // =====================================
 
   const defects = useMemo(() => {
     if (!analysisResult) return [];
 
-    if (
-      !analysisResult.hasDefect ||
-      analysisResult.defectType === "no_defect"
-    ) {
+    if (!analysisResult.hasDefect) {
       return [
         {
           title: "Дефекты не обнаружены",
           cause: analysisResult.comment || "Шов визуально выглядит корректно",
+
           recommendation:
-            analysisResult.recommendation ||
-            "Сохраняйте текущие параметры сварки",
+            analysisResult.recommendation || "Корректировка не требуется",
         },
       ];
     }
 
     return [
       {
-        title:
-          defectTypeMap[analysisResult.defectType] || analysisResult.defectType,
-        cause:
-          analysisResult.comment || "Причина требует дополнительной проверки",
-        recommendation:
-          analysisResult.recommendation || "Проверьте параметры сварки",
+        title: analysisResult.defectType,
+        cause: analysisResult.comment,
+        recommendation: analysisResult.recommendation,
       },
     ];
   }, [analysisResult]);
+
+  // =====================================
+  // PARAMETERS
+  // =====================================
 
   const parameters = useMemo(() => {
     if (!analysisResult) return [];
@@ -153,6 +184,10 @@ export default function AIAssistant() {
     return getParametersByDefect(analysisResult.defectType);
   }, [analysisResult]);
 
+  // =====================================
+  // SCORE
+  // =====================================
+
   const score = useMemo(() => {
     if (!analysisResult) return 0;
 
@@ -161,57 +196,90 @@ export default function AIAssistant() {
     switch (analysisResult.severity) {
       case "low":
         return 78;
+
       case "medium":
         return 62;
+
       case "high":
         return 38;
+
       default:
         return 50;
     }
   }, [analysisResult]);
 
+  // =====================================
+  // SCORE TEXT
+  // =====================================
+
   const scoreText = useMemo(() => {
     if (!analysisResult) return "";
 
-    if (!analysisResult.hasDefect) return "Шов в хорошем состоянии";
+    if (!analysisResult.hasDefect) {
+      return "Шов в хорошем состоянии";
+    }
 
-    
     switch (analysisResult.severity) {
       case "low":
         return "Есть небольшие отклонения";
+
       case "medium":
         return "Требуется улучшение";
+
       case "high":
         return "Требуется срочная корректировка";
+
       default:
         return "Нужна дополнительная проверка";
     }
   }, [analysisResult]);
 
+  // =====================================
+  // BOX
+  // =====================================
+
   const box = analysisResult?.box;
+
+  // =====================================
+  // RESET
+  // =====================================
 
   const resetAnalysis = () => {
     setShowResults(false);
+
     setSelectedFile(null);
+
     setPreviewUrl("");
+
     setAnalysisResult(null);
+
     setAnalyzeError("");
   };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 mt-16 max-sm:mt-10 max-sm:px-3">
+      {/* ===================================== */}
+      {/* HEADER */}
+      {/* ===================================== */}
+
       <div className="text-center mb-10">
         <h1 className="text-3xl max-sm:text-2xl font-bold text-deepBlue mb-4">
           AI-помощник анализа швов
         </h1>
+
         <p className="text-deepBlue text-lg max-sm:text-base max-w-2xl mx-auto">
           Загрузите фото сварного шва. AI определит дефекты и объяснит причину.
         </p>
       </div>
 
+      {/* ===================================== */}
+      {/* CHAT */}
+      {/* ===================================== */}
+
       <div className="bg-white rounded-3xl p-6 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <MessageSquare className="w-5 h-5 text-[#DD6207]" />
+
           <h3 className="font-semibold text-[#0C0D33]">Задайте свой вопрос</h3>
         </div>
 
@@ -231,7 +299,7 @@ export default function AIAssistant() {
                       : "bg-gray-100 text-[#0C0D33]"
                   }`}
                 >
-                  <p className="text-sm">{msg.text}</p>
+                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ))}
@@ -246,9 +314,10 @@ export default function AIAssistant() {
             type="text"
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Опишите дефект шва или задайте вопрос AI..."
+            placeholder="Спросите про сварку..."
             className="flex-1 px-5 py-3 rounded-xl border-2 border-gray-200 focus:border-[#DD6207] focus:outline-none transition-colors text-[#0C0D33]"
           />
+
           <button
             type="submit"
             className="bg-[#DD6207] hover:bg-orange-600 text-white px-6 py-3 max-sm:w-full rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
@@ -258,6 +327,10 @@ export default function AIAssistant() {
           </button>
         </form>
       </div>
+
+      {/* ===================================== */}
+      {/* UPLOAD */}
+      {/* ===================================== */}
 
       {!showResults ? (
         <div className="bg-white rounded-3xl p-8 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10">
@@ -269,8 +342,11 @@ export default function AIAssistant() {
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => {
               e.preventDefault();
+
               setIsDragging(false);
+
               const droppedFile = e.dataTransfer.files?.[0] || null;
+
               handleFileSelect(droppedFile);
             }}
             className={`block border-2 border-dashed rounded-3xl p-16 max-sm:p-8 text-center cursor-pointer transition-all duration-300 ${
@@ -283,12 +359,15 @@ export default function AIAssistant() {
               type="file"
               accept="image/png,image/jpeg,image/jpg,image/webp"
               className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                handleFileSelect(e.target.files?.[0] || null)
+              }
             />
 
             {isAnalyzing ? (
               <div className="flex flex-col items-center">
                 <div className="w-16 h-16 border-4 border-[#0C0D33] border-t-[#DD6207] rounded-full animate-spin mb-4" />
+
                 <p className="text-[#0C0D33] font-semibold">
                   Анализируем шов...
                 </p>
@@ -298,10 +377,13 @@ export default function AIAssistant() {
                 <div className="w-20 h-20 bg-linear-to-br from-[#0C0D33] to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Upload className="w-10 h-10 text-white" />
                 </div>
+
                 <p className="text-xl max-sm:text-base font-semibold text-[#0C0D33] mb-2">
                   Перетащите изображение сюда
                 </p>
+
                 <p className="text-gray-500 mb-4">или нажмите для загрузки</p>
+
                 <p className="text-sm text-gray-400">
                   Поддержка JPG / PNG / WEBP
                 </p>
@@ -315,17 +397,21 @@ export default function AIAssistant() {
             )}
           </label>
 
+          {/* ===================================== */}
+          {/* PREVIEW */}
+          {/* ===================================== */}
+
           {previewUrl && !isAnalyzing && (
-            <div className="mt-6">
+            <div className="mt-6 relative w-full overflow-hidden rounded-2xl">
               <img
                 src={previewUrl || photo}
                 alt="Сварной шов"
-                className="w-full h-full object-cover"
+                className="w-full h-auto rounded-2xl"
               />
 
               {box && (
                 <div
-                  className="absolute border-4 border-red-500 rounded-lg animate-pulse pointer-events-none"
+                  className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
                   style={{
                     left: `${(box.x - box.width / 2) * 100}%`,
                     top: `${(box.y - box.height / 2) * 100}%`,
@@ -351,15 +437,31 @@ export default function AIAssistant() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* ===================================== */}
+          {/* RESULT */}
+          {/* ===================================== */}
+
           <div className="bg-white rounded-3xl p-8 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10">
             <div className="flex flex-row max-sm:flex-col gap-8 max-sm:gap-4">
               <div className="w-1/2 max-sm:w-full">
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-video">
+                <div className="relative rounded-2xl overflow-hidden bg-gray-100">
                   <img
                     src={previewUrl || photo}
                     alt="Сварной шов"
                     className="w-full h-full object-cover"
                   />
+
+                  {box && (
+                    <div
+                      className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
+                      style={{
+                        left: `${(box.x - box.width / 2) * 100}%`,
+                        top: `${(box.y - box.height / 2) * 100}%`,
+                        width: `${box.width * 100}%`,
+                        height: `${box.height * 100}%`,
+                      }}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -378,18 +480,15 @@ export default function AIAssistant() {
                       }`}
                     />
                   </div>
+
                   <div>
                     <h2 className="text-2xl font-bold text-[#0C0D33]">
                       Результат анализа
                     </h2>
+
                     <p className="text-gray-500">
                       {analysisResult?.hasDefect ? (
-                        <>
-                          Обнаружено:{" "}
-                          <span className="font-semibold text-red-500">
-                            {defects.length} дефект
-                          </span>
-                        </>
+                        <>Обнаружен дефект</>
                       ) : (
                         <span className="font-semibold text-green-600">
                           Явных дефектов не обнаружено
@@ -403,17 +502,22 @@ export default function AIAssistant() {
                   <h3 className="font-semibold text-[#0C0D33] mb-4">
                     Общая оценка
                   </h3>
+
                   <div className="flex items-center gap-4">
                     <div className="text-4xl max-sm:text-2xl font-bold text-[#DD6207]">
                       {score}%
                     </div>
+
                     <div className="flex-1">
                       <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-linear-to-r from-red-500 via-[#DD6207] to-green-500 rounded-full"
-                          style={{ width: `${score}%` }}
+                          style={{
+                            width: `${score}%`,
+                          }}
                         />
                       </div>
+
                       <p className="text-sm text-gray-500 mt-2">{scoreText}</p>
                     </div>
                   </div>
@@ -424,8 +528,9 @@ export default function AIAssistant() {
                         <span className="font-semibold">
                           Уверенность модели:
                         </span>{" "}
-                        {Math.round(analysisResult.confidence * 100)}%
+                        {Math.round(Number(analysisResult.confidence) * 100)}%
                       </p>
+
                       <p className="text-sm text-[#0C0D33]">
                         <span className="font-semibold">Комментарий:</span>{" "}
                         {analysisResult.comment}
@@ -437,6 +542,10 @@ export default function AIAssistant() {
             </div>
           </div>
 
+          {/* ===================================== */}
+          {/* DEFECTS */}
+          {/* ===================================== */}
+
           <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 max-sm:gap-4">
             {defects.map((defect, index) => (
               <div
@@ -447,15 +556,19 @@ export default function AIAssistant() {
                   <div className="w-10 h-10 bg-[#DD6207] rounded-xl flex items-center justify-center text-white font-bold">
                     {index + 1}
                   </div>
+
                   <h3 className="text-lg font-bold text-[#0C0D33]">
                     {defect.title}
                   </h3>
                 </div>
+
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Причина:</p>
+
                     <p className="text-[#0C0D33]">{defect.cause}</p>
                   </div>
+
                   <div className="bg-green-50 rounded-xl p-4">
                     <p className="text-sm text-green-700">
                       <span className="font-semibold">Рекомендация:</span>{" "}
@@ -467,10 +580,15 @@ export default function AIAssistant() {
             ))}
           </div>
 
+          {/* ===================================== */}
+          {/* PARAMETERS */}
+          {/* ===================================== */}
+
           <div className="bg-white rounded-3xl p-8 max-sm:p-4 shadow-xl shadow-[#0C0D33]/10">
             <h3 className="text-xl font-bold text-[#0C0D33] mb-6">
               Что изменить
             </h3>
+
             <div className="space-y-4">
               {parameters.map((param, index) => (
                 <div
@@ -483,10 +601,12 @@ export default function AIAssistant() {
                     ) : (
                       <ChevronRight className="w-6 h-6 text-[#DD6207]" />
                     )}
+
                     <span className="font-medium text-[#0C0D33]">
                       {param.name}
                     </span>
                   </div>
+
                   <div className="flex items-center gap-4">
                     <span
                       className={
@@ -497,6 +617,7 @@ export default function AIAssistant() {
                     >
                       {param.current}
                     </span>
+
                     <span className="text-[#DD6207] font-semibold">
                       {param.recommended}
                     </span>
@@ -505,6 +626,10 @@ export default function AIAssistant() {
               ))}
             </div>
           </div>
+
+          {/* ===================================== */}
+          {/* RESET */}
+          {/* ===================================== */}
 
           <button
             onClick={resetAnalysis}
@@ -519,21 +644,9 @@ export default function AIAssistant() {
   );
 }
 
-const defectTypeMap: Record<string, string> = {
-  no_defect: "Дефекты не обнаружены",
-  porosity: "Поры",
-  crack: "Трещина",
-  undercut: "Подрез",
-  burn_through: "Прожог",
-  lack_of_fusion: "Непровар",
-  slag_inclusion: "Шлаковое включение",
-  spatter: "Разбрызгивание металла",
-  unknown: "Не удалось точно определить дефект",
-};
-
-function getParametersByDefect(defectType: string) {
+function getParametersByDefect(defectType: string | undefined) {
   switch (defectType) {
-    case "undercut":
+    case "Подрез":
       return [
         {
           name: "Ток",
@@ -549,7 +662,7 @@ function getParametersByDefect(defectType: string) {
         },
       ];
 
-    case "porosity":
+    case "Пористость":
       return [
         {
           name: "Чистота поверхности",
@@ -565,7 +678,7 @@ function getParametersByDefect(defectType: string) {
         },
       ];
 
-    case "crack":
+    case "Трещина":
       return [
         {
           name: "Температурный режим",

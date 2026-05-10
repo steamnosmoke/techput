@@ -21,18 +21,63 @@ const upload = multer({
 const ROBOFLOW_KEY = process.env.ROBOFLOW_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
+// =========================
+// MODELS
+// =========================
+
 const MODELS = [
   "google/gemma-3-27b-it",
   "deepseek/deepseek-chat-v3-0324",
   "openai/gpt-4o-mini",
 ];
 
-console.log("ROBOFLOW_KEY EXISTS:", !!ROBOFLOW_KEY);
-console.log("OPENROUTER_KEY EXISTS:", !!OPENROUTER_KEY);
+// =========================
+// DEFECT MAP
+// =========================
 
-app.get("/", (req, res) => {
-  res.send("Swarka AI server is running");
-});
+const DEFECT_MAP = {
+  inclusion: "Шлаковое включение",
+  crack: "Трещина",
+  porosity: "Пористость",
+  undercut: "Подрез",
+  spatter: "Разбрызгивание металла",
+  lack_of_fusion: "Непровар",
+  burn_through: "Прожог",
+  distortion: "Деформация шва",
+  overlap: "Наплыв",
+  crater: "Кратер",
+  no_defect: "Дефекты не обнаружены",
+};
+
+// =========================
+// HELPERS
+// =========================
+
+function normalizeDefectName(defect) {
+  return DEFECT_MAP[defect] || defect;
+}
+
+function extractJson(text) {
+  try {
+    if (!text) return null;
+
+    const cleaned = text
+      .replace(/```json/gim, "")
+      .replace(/```/gim, "")
+      .trim();
+
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+
+    if (start === -1 || end === -1) {
+      return null;
+    }
+
+    return JSON.parse(cleaned.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
 
 async function askLLM(messages) {
   let lastError = null;
@@ -51,7 +96,7 @@ async function askLLM(messages) {
           },
           body: JSON.stringify({
             model,
-            temperature: 0.3,
+            temperature: 0.2,
             messages,
           }),
         },
@@ -60,8 +105,6 @@ async function askLLM(messages) {
       const data = await response.json();
 
       if (!response.ok) {
-        console.log("MODEL FAILED:", model);
-
         lastError = data;
         continue;
       }
@@ -73,12 +116,8 @@ async function askLLM(messages) {
         continue;
       }
 
-      console.log("MODEL SUCCESS:", model);
-
       return text;
     } catch (error) {
-      console.log("MODEL ERROR:", model);
-
       lastError = error;
     }
   }
@@ -88,24 +127,20 @@ async function askLLM(messages) {
   );
 }
 
-function normalizeDefectName(defect) {
-  const map = {
-    inclusion: "Шлаковое включение",
-    crack: "Трещина",
-    porosity: "Пористость",
-    undercut: "Подрез",
-    spatter: "Разбрызгивание",
-    lack_of_fusion: "Непровар",
-    burn_through: "Прожог",
-  };
+// =========================
+// ROOT
+// =========================
 
-  return map[defect] || defect;
-}
+app.get("/", (req, res) => {
+  res.send("Swarka AI server is running");
+});
+
+// =========================
+// IMAGE ANALYSIS
+// =========================
 
 app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
   try {
-    console.log("START IMAGE ANALYSIS");
-
     if (!req.file) {
       return res.status(400).json({
         error: "Нет изображения",
@@ -114,9 +149,9 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     const base64Image = req.file.buffer.toString("base64");
 
-    // =====================
+    // =========================
     // ROBOFLOW
-    // =====================
+    // =========================
 
     const detection = await fetch(
       "https://serverless.roboflow.com/s-workspace-bddld/workflows/detect-count-and-visualize-3",
@@ -139,95 +174,120 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
 
     const detectionData = await detection.json();
 
+    if (!detection.ok) {
+      return res.status(500).json({
+        error: "Ошибка Roboflow",
+        details: detectionData,
+      });
+    }
+
     const predictions =
       detectionData?.outputs?.[0]?.predictions?.predictions || [];
+
+    // =========================
+    // NO DEFECTS
+    // =========================
 
     if (!predictions.length) {
       return res.json({
         hasDefect: false,
-        defectType: "no_defect",
-        severity: "low",
-        confidence: 0.95,
-        comment: "AI не обнаружил выраженных дефектов сварного соединения.",
-        recommendation:
-          "Шов выглядит стабильно. Рекомендуется дополнительный контроль при нагрузке.",
+        defects: [],
       });
     }
 
-    const defect = predictions[0];
+    // =========================
+    // IMAGE SIZE
+    // =========================
 
-    const defectTypeRaw =
-      defect.class ||
-      defect.class_name ||
-      defect.predicted_classes ||
-      "unknown";
+    const imgW = detectionData?.outputs?.[0]?.image?.width || 1;
 
-    const defectType = normalizeDefectName(defectTypeRaw);
+    const imgH = detectionData?.outputs?.[0]?.image?.height || 1;
 
-    // =====================
-    // AI EXPLANATION
-    // =====================
+    // =========================
+    // PROCESS DEFECTS
+    // =========================
 
-    const aiText = await askLLM([
-      {
-        role: "system",
-        content: `
-Ты профессиональный инженер-сварщик.
+    const defects = await Promise.all(
+      predictions.map(async (defect) => {
+        const rawDefectType =
+          defect.class ||
+          defect.class_name ||
+          defect.predicted_classes ||
+          "unknown";
 
-Отвечай только на русском языке.
+        const defectType = normalizeDefectName(rawDefectType);
 
-Объясняй дефекты сварки технически грамотно и кратко.
+        const aiText = await askLLM([
+          {
+            role: "system",
+            content: `
+Ты инженер-сварщик.
 
-Никогда не используй английские слова.
-
-Верни строго JSON.
-`,
-      },
-      {
-        role: "user",
-        content: `
-Обнаружен дефект сварного шва: ${defectType}
+Отвечай:
+- только на русском
+- без markdown
+- без английского
 
 Верни JSON:
 
 {
   "severity": "low | medium | high",
-  "comment": "краткое объяснение причины",
+  "comment": "краткое объяснение",
   "recommendation": "что исправить"
 }
 `,
-      },
-    ]);
+          },
+          {
+            role: "user",
+            content: `
+Дефект: ${defectType}
 
-    let parsed;
+Объясни:
+1. Причину
+2. Опасность
+3. Как исправить
+`,
+          },
+        ]);
 
-    try {
-      parsed = JSON.parse(aiText);
-    } catch {
-      parsed = {
-        severity: "medium",
-        comment: aiText,
-        recommendation: "Требуется ручная проверка",
-      };
-    }
+        const parsed = extractJson(aiText);
+
+        return {
+          defectType,
+          severity: parsed?.severity || "medium",
+          confidence: defect.confidence || 0,
+          comment:
+            parsed?.comment || "Требуется дополнительная проверка дефекта.",
+          recommendation:
+            parsed?.recommendation || "Проверьте параметры сварки.",
+
+          box: {
+            x: (defect.x || 0) / imgW,
+            y: (defect.y || 0) / imgH,
+            width: (defect.width || 0) / imgW,
+            height: (defect.height || 0) / imgH,
+          },
+        };
+      }),
+    );
 
     return res.json({
       hasDefect: true,
-      defectType: defectTypeRaw,
-      severity: parsed.severity,
-      confidence: defect.confidence || 0,
-      comment: parsed.comment,
-      recommendation: parsed.recommendation,
+      defects,
     });
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       error: "Ошибка анализа",
-      details: error.message,
+      details: error?.message || "Unknown error",
     });
   }
 });
+
+// =========================
+// CHAT
+// =========================
 
 app.post("/api/welding-chat", async (req, res) => {
   try {
@@ -246,18 +306,22 @@ app.post("/api/welding-chat", async (req, res) => {
 Ты AI-помощник по сварке.
 
 Ты отвечаешь только на темы:
-- MIG/MAG
 - TIG
+- MIG/MAG
 - MMA
-- дефекты сварки
+- сварочные дефекты
+- сварочные аппараты
 - электроды
-- режимы тока
-- настройки аппарата
 - металлы
-- сварочные швы
+- режимы сварки
 
-Отвечай кратко и профессионально.
-Только на русском языке.
+Если вопрос не связан со сваркой —
+сообщи что специализируешься только на сварке.
+
+Отвечай:
+- кратко
+- профессионально
+- только на русском
 `,
       },
       {
@@ -274,13 +338,17 @@ app.post("/api/welding-chat", async (req, res) => {
 
     return res.status(500).json({
       error: "Ошибка AI",
-      details: error.message,
+      details: error?.message || "Unknown error",
     });
   }
 });
 
+// =========================
+// START
+// =========================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server started on ${PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });
