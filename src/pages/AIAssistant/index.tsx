@@ -11,6 +11,7 @@ import {
 
 import photo from "./images/photo.png";
 import { analyzeWeld, type AnalyzeWeldResponse } from "./api/analyzeWeld";
+import { weldingChat } from "./api/weldingChat";
 
 type ChatMessage = { type: "user" | "ai"; text: string };
 
@@ -67,25 +68,43 @@ export default function AIAssistant() {
     }
   };
 
-  const handleTextSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!textInput.trim()) return;
+ const handleTextSubmit = async (e: React.FormEvent) => {
+   e.preventDefault();
 
-    const userMessage = textInput;
+   if (!textInput.trim()) return;
 
-    setChatMessages((prev) => [...prev, { type: "user", text: userMessage }]);
-    setTextInput("");
+   const userMessage = textInput;
 
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          type: "ai",
-          text: "Я проанализировал ваше описание. Рекомендую загрузить фото шва для точной диагностики дефектов. Вы также можете описать проблему подробнее — какой материал свариваете, какой ток используете, какие дефекты наблюдаете?",
-        },
-      ]);
-    }, 1000);
-  };
+   setChatMessages((prev) => [
+     ...prev,
+     {
+       type: "user",
+       text: userMessage,
+     },
+   ]);
+
+   setTextInput("");
+
+   try {
+     const answer = await weldingChat(userMessage);
+
+     setChatMessages((prev) => [
+       ...prev,
+       {
+         type: "ai",
+         text: answer,
+       },
+     ]);
+   } catch {
+     setChatMessages((prev) => [
+       ...prev,
+       {
+         type: "ai",
+         text: "Ошибка AI сервиса",
+       },
+     ]);
+   }
+ };
 
   const defects = useMemo(() => {
     if (!analysisResult) return [];
