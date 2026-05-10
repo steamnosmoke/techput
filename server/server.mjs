@@ -269,10 +269,13 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
             parsed?.recommendation || "Проверьте параметры сварки.",
 
           box: {
-            x: (defect.x || 0) / imgW,
-            y: (defect.y || 0) / imgH,
-            width: (defect.width || 0) / imgW,
-            height: (defect.height || 0) / imgH,
+            x: defect.x || 0,
+            y: defect.y || 0,
+            width: defect.width || 0,
+            height: defect.height || 0,
+
+            imageWidth: imgW,
+            imageHeight: imgH,
           },
         };
       }),

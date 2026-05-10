@@ -310,7 +310,6 @@ export default function AIAssistant() {
           </div>
         )}
 
-        
         {isChatLoading && (
           <div className="flex justify-start mb-4">
             <div className="bg-gray-100 text-[#0C0D33] px-4 py-3 rounded-2xl">
@@ -328,7 +327,7 @@ export default function AIAssistant() {
             </div>
           </div>
         )}
-        
+
         <form
           onSubmit={handleTextSubmit}
           className="flex gap-3 max-sm:flex-col"
@@ -436,10 +435,10 @@ export default function AIAssistant() {
                 <div
                   className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
                   style={{
-                    left: `${(box.x - box.width / 2) * 100}%`,
-                    top: `${(box.y - box.height / 2) * 100}%`,
-                    width: `${box.width * 100}%`,
-                    height: `${box.height * 100}%`,
+                    left: `${(box.x - box.imageWidth / 2) * 100}%`,
+                    top: `${(box.y - box.imageHeight / 2) * 100}%`,
+                    width: `${(box.width / box.imageWidth) * 100}%`,
+                    height: `${(box.height / box.imageHeight) * 100}%`,
                   }}
                 />
               )}

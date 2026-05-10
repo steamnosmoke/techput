@@ -5,6 +5,8 @@ export interface BoundingBox {
   y: number;
   width: number;
   height: number;
+  imageWidth: number;
+  imageHeight: number;
 }
 
 export interface WeldDefect {
