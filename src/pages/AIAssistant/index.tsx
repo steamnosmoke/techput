@@ -222,20 +222,23 @@ export default function AIAssistant() {
 
     if (!analysisResult.hasDefect) return 95;
 
-    switch (firstDefect?.severity) {
-      case "low":
-        return 78;
+    const severityScores = {
+      low: 78,
+      medium: 62,
+      high: 38,
+    };
 
-      case "medium":
-        return 62;
+    const scores = analysisResult.defects.map((defect) => {
+      return (
+        severityScores[defect.severity as keyof typeof severityScores] || 50
+      );
+    });
 
-      case "high":
-        return 38;
+    const average =
+      scores.reduce((acc, value) => acc + value, 0) / scores.length;
 
-      default:
-        return 50;
-    }
-  }, [analysisResult, firstDefect]);
+    return Math.round(average);
+  }, [analysisResult]);
 
   // =====================================
   // SCORE TEXT
@@ -248,20 +251,16 @@ export default function AIAssistant() {
       return "Шов в хорошем состоянии";
     }
 
-    switch (firstDefect?.severity) {
-      case "low":
-        return "Есть небольшие отклонения";
-
-      case "medium":
-        return "Требуется улучшение";
-
-      case "high":
-        return "Требуется срочная корректировка";
-
-      default:
-        return "Нужна дополнительная проверка";
+    if (score >= 80) {
+      return "Есть небольшие отклонения";
     }
-  }, [analysisResult]);
+
+    if (score >= 55) {
+      return "Требуется улучшение";
+    }
+
+    return "Требуется срочная корректировка";
+  }, [analysisResult, score]);
 
   // =====================================
   // BOX
@@ -603,11 +602,6 @@ export default function AIAssistant() {
                           Уверенность модели:
                         </span>{" "}
                         {Math.round((firstDefect?.confidence || 0) * 100)}%
-                      </p>
-
-                      <p className="text-sm text-[#0C0D33]">
-                        <span className="font-semibold">Комментарий:</span>{" "}
-                        {firstDefect?.comment}
                       </p>
                     </div>
                   )}
