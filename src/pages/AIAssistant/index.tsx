@@ -36,6 +36,8 @@ export default function AIAssistant() {
   const [analysisResult, setAnalysisResult] =
     useState<AnalyzeWeldResponse | null>(null);
 
+  const firstDefect = analysisResult?.defects?.[0];
+
   // =====================================
   // FILE SELECT
   // =====================================
@@ -154,13 +156,11 @@ export default function AIAssistant() {
       ];
     }
 
-    return [
-      {
-        title: analysisResult.defectType,
-        cause: analysisResult.comment,
-        recommendation: analysisResult.recommendation,
-      },
-    ];
+    return analysisResult.defects.map((defect) => ({
+      title: defect.defectType,
+      cause: defect.comment,
+      recommendation: defect.recommendation,
+    }));
   }, [analysisResult]);
 
   // =====================================
@@ -181,7 +181,7 @@ export default function AIAssistant() {
       ];
     }
 
-    return getParametersByDefect(analysisResult.defectType);
+    return getParametersByDefect(firstDefect?.defectType);
   }, [analysisResult]);
 
   // =====================================
@@ -193,7 +193,7 @@ export default function AIAssistant() {
 
     if (!analysisResult.hasDefect) return 95;
 
-    switch (analysisResult.severity) {
+    switch (firstDefect?.severity) {
       case "low":
         return 78;
 
@@ -206,7 +206,7 @@ export default function AIAssistant() {
       default:
         return 50;
     }
-  }, [analysisResult]);
+  }, [analysisResult, firstDefect]);
 
   // =====================================
   // SCORE TEXT
@@ -219,7 +219,7 @@ export default function AIAssistant() {
       return "Шов в хорошем состоянии";
     }
 
-    switch (analysisResult.severity) {
+    switch (firstDefect?.severity) {
       case "low":
         return "Есть небольшие отклонения";
 
@@ -238,7 +238,7 @@ export default function AIAssistant() {
   // BOX
   // =====================================
 
-  const box = analysisResult?.box;
+  const box = firstDefect?.box;
 
   // =====================================
   // RESET
@@ -451,17 +451,22 @@ export default function AIAssistant() {
                     className="w-full h-full object-cover"
                   />
 
-                  {box && (
-                    <div
-                      className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
-                      style={{
-                        left: `${(box.x - box.width / 2) * 100}%`,
-                        top: `${(box.y - box.height / 2) * 100}%`,
-                        width: `${box.width * 100}%`,
-                        height: `${box.height * 100}%`,
-                      }}
-                    />
-                  )}
+                  {analysisResult?.defects?.map((defect, index) => {
+                    if (!defect.box) return null;
+
+                    return (
+                      <div
+                        key={index}
+                        className="absolute border-4 border-red-500 rounded-xl animate-pulse pointer-events-none"
+                        style={{
+                          left: `${(defect.box.x - defect.box.width / 2) * 100}%`,
+                          top: `${(defect.box.y - defect.box.height / 2) * 100}%`,
+                          width: `${defect.box.width * 100}%`,
+                          height: `${defect.box.height * 100}%`,
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
@@ -528,12 +533,12 @@ export default function AIAssistant() {
                         <span className="font-semibold">
                           Уверенность модели:
                         </span>{" "}
-                        {Math.round(Number(analysisResult.confidence) * 100)}%
+                        {Math.round((firstDefect?.confidence || 0) * 100)}%
                       </p>
 
                       <p className="text-sm text-[#0C0D33]">
                         <span className="font-semibold">Комментарий:</span>{" "}
-                        {analysisResult.comment}
+                        {firstDefect?.comment}
                       </p>
                     </div>
                   )}

@@ -192,6 +192,8 @@ app.post("/api/analyze-weld", upload.single("image"), async (req, res) => {
       return res.json({
         hasDefect: false,
         defects: [],
+        comment: "AI не обнаружил дефектов",
+        recommendation: "Корректировка не требуется",
       });
     }
 
